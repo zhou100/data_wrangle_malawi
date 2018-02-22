@@ -11,6 +11,12 @@ library("dplyr")
 library("openxlsx")
 library("zoo")
 
+
+
+################################################################################################
+# The purpose of this code is impute the missings in cluster weather by weather in the nearest cluster 
+#################################################################################################
+
 setwd("~/Box Sync/Research/Malawi_FewS/")
 
 # distance betwween each cluster to cover the missing weather 
@@ -76,3 +82,4 @@ lapply[i,is.na(sub[,i])]
 apply(sub,2,function(x) {all(is.na(x))})
 some<-sub[ , colSums(is.na(sub)) != 0]
 colnames(some)
+

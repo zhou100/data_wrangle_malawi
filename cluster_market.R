@@ -9,9 +9,10 @@ library("tidyr")
 library("dplyr")
 library("openxlsx")
 library("zoo")
-#######################################################
-### This code is used for linking markets to Clusters 
-#######################################################
+
+############################################################
+### This code is used for linking markets to Clusters in 2013 
+############################################################
 
 mkt_coord <- read.csv("data/geocoordinates.csv")
 #head(mkt_coord)

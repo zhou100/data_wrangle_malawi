@@ -17,9 +17,9 @@ library("tidyr")
 library("dplyr")
 library("openxlsx")
 library("zoo")
-setwd("~/Box Sync/Research/Malawi_FewS/")
-#malawi <- read.csv("malawi_data_new.csv")
-malawi <- read.csv("malawi_data_aggregate_cluster.csv")
+library(caret)
+
+
 
 
 

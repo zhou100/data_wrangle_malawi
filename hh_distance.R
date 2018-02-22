@@ -12,6 +12,11 @@ library("dplyr")
 library("openxlsx")
 library("zoo")
 
+
+################################################################################################
+# The purpose of this code is to find the nearest mkt for each household in 2010 
+#################################################################################################
+
 ### linking markets to households
 setwd("~/Box Sync/Research/Malawi_FewS/")
 mkt_coord <- read.csv("geocoordinates.csv")
@@ -61,7 +66,6 @@ write.csv(hh_mkt,"hh_near_mkt.csv")
 
 
 
-write.csv(x,"imputed_price_yearmo.csv")
 
 
 

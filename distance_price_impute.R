@@ -9,6 +9,11 @@ library("dplyr")
 library("openxlsx")
 library("zoo")
 
+################################################################################################
+# The purpose of this code is impute the missings in prices by prices in the nearest mkt 
+#################################################################################################
+
+
 ### linking markets to households
 setwd("~/Box Sync/Research/Malawi_FewS/")
 mkt_coord <- read.csv("geocoordinates.csv")
