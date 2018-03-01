@@ -80,7 +80,6 @@ R2_RCSI <- 1- (sum( (RCSI$RCSI_predict - RCSI$RCSI)^2 , na.rm = TRUE ))  / sum((
 
 
 ############################################
-
 ###########cluster level averages
 ############################################
 
@@ -88,7 +87,7 @@ R2_RCSI <- 1- (sum( (RCSI$RCSI_predict - RCSI$RCSI)^2 , na.rm = TRUE ))  / sum((
 logFCS <- read.csv("data/logFCS_predict_CLUST.csv")
 HDDS <- read.csv("data/HDDS_predict_CLUST.csv")
 RCSI <- read.csv("data/RCSI_predict_CLUST.csv")
-
+RCSI_predict_CLUST_IPC
 
 #"Poor_predict","Borderline_predict","Acceptable_predict"
 # Poor_actual","Borderline_actual","Acceptable_actual"
@@ -152,6 +151,52 @@ R2_RCSI <- 1- (sum( (RCSI$RCSI_predict - RCSI$RCSI)^2 , na.rm = TRUE ))  / sum((
 
 R2_RCSI <- 1- (sum( (RCSI$RCSI_predict - RCSI$RCSI)^2 , na.rm = TRUE ))  / sum((RCSI$RCSI-mean(RCSI$RCSI, na.rm = TRUE))^2, na.rm = TRUE )
 
+postResample(pred = RCSI$clust_RCSI_predict, obs = RCSI$clust_RCSI)
+ 
+postResample(pred = HDDS$clust_HDDS_predict, obs = HDDS$clust_HDDS)
+ 
+postResample(pred = logFCS$clust_logFCS_predict, obs = logFCS$clust_logFCS)
 
+
+
+############################################
+###########cluster level averages using IPC value only 
+############################################
+
+library(caret)
+
+logFCS_IPC <- read.csv("data/logFCS_predict_CLUST_IPC.csv")
+HDDS_IPC <- read.csv("data/HDDS_predict_CLUST_IPC.csv")
+RCSI_IPC <- read.csv("data/RCSI_predict_CLUST_IPC.csv")
+
+postResample(pred = RCSI_IPC$clust_RCSI_predict_ipc, obs = RCSI_IPC$clust_RCSI)
+
+postResample(pred = HDDS_IPC$clust_HDDS_predict_ipc, obs = HDDS_IPC$clust_HDDS)
+
+postResample(pred = logFCS_IPC$clust_logFCS_predict_ipc, obs = logFCS_IPC$clust_logFCS)
+
+apply(logFCS_IPC$clust_logFCS_predict_ipc, 1, postResample, obs = logFCS_IPC$clust_logFCS)
+
+hist(RCSI_IPC$clust_RCSI_predict_ipc)
+
+data<-cbind(RCSI_IPC$clust_RCSI_predict_ipc,HDDS_IPC$clust_HDDS_predict_ipc,logFCS_IPC$clust_logFCS_predict_ipc)
+data<-as.data.frame(data)
+colnames(data)<-c("RCSI","HDDS","logFCS")
+library(plyr)
+library(plotrix)
+multhist(data)
+
+long_data<- melt(data,na.rm = TRUE)
+long_data
+
+colnames(long_data)
+
+ggplot(as.data.frame(long_data),aes(x=value, color=variable)) + geom_bar() 
+
+
+
+b + geom_bar()(alpha=0.25,show.legend = TRUE) 
+
+pp <- qplot(value, data=mpgstack) + facet_wrap(~variable, scales="free")
 
 
