@@ -19,10 +19,21 @@ library("openxlsx")
 library("zoo")
 library(caret)
 
-logFCS <- read.csv("data/logFCS_predict_table.csv")
-HDDS <- read.csv("data/HDDS_predict_table.csv")
-RCSI <- read.csv("data/RCSI_predict_table.csv")
 
+# logFCS <- read.csv("data/logFCS_predict_table.csv")
+# HDDS <- read.csv("data/HDDS_predict_table.csv")
+# RCSI <- read.csv("data/RCSI_predict_table.csv")
+logFCS <- read.csv("data/all_predict/clust_logFCS_predict_clust_m3.csv")
+
+logFCS_hh <- read.csv("data/logFCS_predict_table_hh.csv")
+
+HDDS <- read.csv("data/all_predict/clust_HDDS_predict_clust_m3.csv")
+RCSI <- read.csv("data/all_predict/clust_RCSI_predict_clust_m3.csv")
+
+
+colnames(logFCS_hh)<-c("logFCS","logFCS_predict")
+colnames(HDDS)<-c("HDDS","HDDS_predict")
+colnames(RCSI)<-c("RCSI","RCSI_predict")
 
 #"Poor_predict","Borderline_predict","Acceptable_predict"
 # Poor_actual","Borderline_actual","Acceptable_actual"
@@ -31,6 +42,13 @@ logFCS$cat_logFCS<-cut(logFCS$logFCS, c(0,log(28), log(42),Inf),labels=c("Poor",
 logFCS$cat_logFCS_predict<-cut(logFCS$logFCS_predict, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
 
 confusionMatrix(logFCS$cat_logFCS_predict,logFCS$cat_logFCS)
+
+
+
+logFCS_hh$cat_logFCS<-cut(logFCS_hh$logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+logFCS_hh$cat_logFCS_predict<-cut(logFCS_hh$logFCS_predict, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+
+confusionMatrix(logFCS_hh$cat_logFCS_predict,logFCS_hh$cat_logFCS)
 
 plot(logFCS$logFCS,logFCS$logFCS_predict)
 abline(0,1)

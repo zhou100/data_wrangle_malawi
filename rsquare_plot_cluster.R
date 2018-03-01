@@ -34,8 +34,11 @@ r2$level <- factor(r2$level,levels=ord)
 r2$models <- factor(r2$model_num)
 
 
-rplot<-ggplot(r2, aes(x =level, y = rsquares,colour =models,shape = measure))+ geom_point(size=5) 
-rplot<-rplot + labs(title =" R-squares of different models by levels and food security measures", x = "Geo-spatial level", y = "adjusted  R-squares")
+rplot<-ggplot(r2, aes(x =level, y = rsquares,colour =models,shape = measure))+ geom_point(size=7) 
+rplot<-rplot + labs( x = "Geo-spatial level", y = "R Squared")
+
+rplot <- rplot+ theme_bw() 
+rplot <- rplot + theme(text = element_text(size=22)) 
 print(rplot + scale_colour_manual(values = c("Blue", "Red", "Green")))
 
 # ggplot(r2, aes(x =level, y = rsquares,colour = as.factor(model_num),)) + geom_boxplot() + facet_grid(~measure)+ggtitle("R-squares of different models by levels and food security measures")

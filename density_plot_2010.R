@@ -5,13 +5,13 @@ library("ggplot2")
 library("zoo")
 
 
-csv_list <- list.files(path="data/all_predict", 
+csv_list <- list.files(path="data/all_predict_2010", 
                        pattern = "csv$",
                        full.names=TRUE)
 dfnames<-csv_list
 
 # remove irregulars in the file names, 
-pattern<-c("data/all_predict/","clust_",".csv")
+pattern<-c("data/all_predict_2010/","clust_",".csv","_2010")
 for (i in 1:length(pattern)) {
   dfnames <- gsub(pattern[i],"", dfnames)
 }
@@ -32,12 +32,9 @@ for (i in 1:length(dfnames)){
 
 
 
-
-malawi<- read.csv("data/cluster_fs.csv")
-
-logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC.csv")
-HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC.csv")
-RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC.csv")
+logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC_2010.csv")
+HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC_2010.csv")
+RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC_2010.csv")
 
 
 # predict_df$clust_logFCS_clust_predict_m3
@@ -63,8 +60,8 @@ ggplot(as.data.frame(plot_long),aes(x=logFCS,color=level)) + geom_density(alpha=
   theme_bw()
 
 
-ggsave("FCS_2013_full.png", plot = last_plot(),device = "png",path = "output/figures/",
-       dpi = 2000, limitsize = TRUE)
+ggsave("FCS_2010_full.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
 
 
 # with only the ipc and actual 
@@ -80,6 +77,93 @@ ggplot(as.data.frame(plot_actual),aes(x=logFCS, color=level)) + geom_density(alp
   stat_density(data=plot_long_ipc,aes(x=logFCS, y=..scaled..*3.5,color=level)) + scale_y_continuous(sec.axis = sec_axis(~.*28, name = "density (IPC value only) ")) +
   theme_bw()
 
-ggsave("FCS_2013_ipc_vs_actual.png", plot = last_plot(),device = "png",path = "output/figures/",
+ggsave("FCS_2010_ipc_vs_actual.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+
+RCSI_data<-cbind(predict_df$clust_RCSI_ipczone_predict_m3,predict_df$clust_RCSI_TA_predict_m3,predict_df$clust_RCSI_clust_predict_m3,predict_df$clust_RCSI,logRCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_rcsi<- melt(RCSI_data,na.rm=TRUE)
+colnames(long_rcsi)<-c("no","level","RCSI")
+plot_long<- long_rcsi[long_rcsi$level != "IPC_value_only",]
+plot_long_ipc<- long_rcsi[long_rcsi$level == "IPC_value_only",]
+
+
+ggplot(as.data.frame(plot_long),aes(x=RCSI, color=level))+ stat_density(data=plot_long_ipc,aes(x=RCSI,y=..scaled../2.3,color=level)) + geom_density(alpha=0.25)+xlim(0, 45) + 
+  geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)+
+  scale_y_continuous(name= "density",sec.axis = sec_axis(~.*3.125, name = "density (IPC value only) ")) +
+  theme_bw()
+
+ggsave("RCSI_2010_full.png", plot = last_plot(),device = "png",path = "output/figures/",
        dpi = 2000, limitsize = TRUE)
 
+
+# with only the ipc and actual 
+RCSI_data<-cbind(predict_df$clust_RCSI_ipczone_predict_m3,predict_df$clust_RCSI_TA_predict_m3,predict_df$clust_RCSI_clust_predict_m3,predict_df$clust_RCSI,RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_rcsi<- melt(RCSI_data,na.rm=TRUE)
+colnames(long_rcsi)<-c("no","level","RCSI")
+plot_actual<- long_rcsi[long_rcsi$level == "Actual",]
+plot_long_ipc<- long_rcsi[long_rcsi$level == "IPC_value_only",]
+
+ggplot(as.data.frame(plot_actual),aes(x=RCSI, color=level)) + geom_density(alpha=0.25)+xlim(0, 45) + 
+  geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)+
+  stat_density(data=plot_long_ipc,aes(x=RCSI, y=..scaled../5,color=level)) + scale_y_continuous(sec.axis = sec_axis(~.*3.125*2.15, name = "density (IPC value only) ")) +
+  theme_bw()
+
+
+
+ggsave("RCSI_2010_ipc_vs_actual.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+# ggplot(as.data.frame(plot_long),aes(x=RCSI, color=level)) + geom_density(alpha=0.25)+xlim(0, 45) + geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)
+# 
+# ggplot(long_RCSI,aes(x=level,y= RCSI,fill=level)) +  geom_boxplot()+ geom_hline(yintercept =4 ,linetype=2) + geom_hline(yintercept =17,linetype=2) + geom_hline(yintercept =42,linetype=2)
+
+
+HDDS_data<-cbind(predict_df$clust_HDDS_ipczone_predict_m3,predict_df$clust_HDDS_TA_predict_m3,predict_df$clust_HDDS_clust_predict_m3,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_HDDS<- melt(HDDS_data,na.rm=TRUE)
+colnames(long_HDDS)<-c("no","level","HDDS")
+plot_long<- long_HDDS[long_HDDS$level != "IPC_value_only",]
+plot_long_ipc<- long_HDDS[long_HDDS$level == "IPC_value_only",]
+
+ggplot(as.data.frame(plot_long),aes(x=HDDS, color=level))+ geom_density(alpha=0.25,show.legend = TRUE) +
+  xlim(1.5, 7.6) + geom_vline(xintercept=3,linetype=2) + geom_vline(xintercept=6,linetype=2) +
+  stat_density(data=plot_long_ipc,aes(x=HDDS,y=..scaled..*1.1,color=level)) +
+  scale_y_continuous(name= "density",sec.axis = sec_axis(~.*12, name = "density (IPC value only) ")) 
+
+
+
+
+# ggplot(as.data.frame(plot_long),aes(x=HDDS, color=level))+ stat_density(data=plot_long_ipc,aes(x=HDDS,y=..scaled../2.3,color=level)) + geom_density(alpha=0.25)+xlim(0, 45) + 
+#   geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)+
+#   scale_y_continuous(name= "density",sec.axis = sec_axis(~.*3.125, name = "density (IPC value only) ")) +
+#   theme_bw()
+
+
+
+ggsave("HDDS_2010_full.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+
+# with only the ipc and actual 
+HDDS_data<-cbind(predict_df$clust_HDDS_ipczone_predict_m3,predict_df$clust_HDDS_TA_predict_m3,predict_df$clust_HDDS_clust_predict_m3,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_HDDS<- melt(HDDS_data,na.rm=TRUE)
+colnames(long_HDDS)<-c("no","level","HDDS")
+plot_actual<- long_HDDS[long_HDDS$level == "Actual",]
+plot_long_ipc<- long_HDDS[long_HDDS$level == "IPC_value_only",]
+
+
+ggplot(as.data.frame(plot_actual),aes(x=HDDS, color=level)) + geom_density(alpha=0.25,show.legend = TRUE) +
+  xlim(1.5, 7.6) + geom_vline(xintercept=3,linetype=2) + geom_vline(xintercept=6,linetype=2) +
+  stat_density(data=plot_long_ipc,aes(x=HDDS, y=..scaled../1.4,color=level)) +
+  scale_y_continuous(sec.axis = sec_axis(~.*20, name = "density (IPC value only) ")) +
+  theme_bw()
+
+
+
+ggsave("HDDS_2010_ipc_vs_actual.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+# 
