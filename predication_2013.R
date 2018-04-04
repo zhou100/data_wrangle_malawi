@@ -105,7 +105,7 @@ R2_RCSI <- 1- (sum( (RCSI$RCSI_predict - RCSI$RCSI)^2 , na.rm = TRUE ))  / sum((
 logFCS <- read.csv("data/logFCS_predict_CLUST.csv")
 HDDS <- read.csv("data/HDDS_predict_CLUST.csv")
 RCSI <- read.csv("data/RCSI_predict_CLUST.csv")
-RCSI_predict_CLUST_IPC
+#RCSI_predict_CLUST_IPC
 
 #"Poor_predict","Borderline_predict","Acceptable_predict"
 # Poor_actual","Borderline_actual","Acceptable_actual"
