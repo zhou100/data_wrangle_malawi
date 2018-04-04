@@ -229,7 +229,7 @@ ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figu
 ggplot(d, aes(HDDS_cluster, HDDS_pred )) +
   geom_point(shape = 16, size = 3, show.legend = FALSE) +
   theme_minimal() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2")
+  scale_color_brewer(palette="Dark2") +
 
 
 ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
