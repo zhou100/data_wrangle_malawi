@@ -197,6 +197,7 @@ write.csv(poor_rcsi,"data/poor_rcsi.csv")
 
 
 
+<<<<<<< HEAD
 actuals<-cbind(logFCS_predict_m3[1],RCSI_predict_m3[1],HDDS_predict_m3[1])
 colnames(actuals)<-c("logFCS_cluster","RCSI_cluster","HDDS_cluster")
 
@@ -237,3 +238,5 @@ ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figu
 
 
  
+=======
+>>>>>>> 87cfe82114abdc3d5ab4f9b6bbdc4c546576a73c
