@@ -1,0 +1,280 @@
+---
+title: "Result_writeup"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+1.	summary stats (pooled data of 2010 and 2013)
+  a.	FS by month plot 
+
+  b.	bar chart of variation 
+
+2.	Result of 2013 prediction 
+
+a.	Fixed effects (cluster, month) 
++ what set of dummies to add in ? 
+
+```{r,include=FALSE}
+source("function/linear.R")
+source("function/formula.R")
+library("dplyr")
+``` 
+
+```{r,include=FALSE}
+clust_2010 <- read.csv("data/clust_2010.csv")
+clust_2013 = read.csv("data/clust_2013.csv")
+
+
+```
+
+```{r,include=FALSE}
+
+# levels 
+levels<-c("ipczone","TA","clust")
+
+
+# variables 
+weather<-c("L12raincytot","L12day1rain","L12maxdays","floodmax")
+access<-c("lag_price","lag_thinn")
+asset1 <-c("roof","cells_own")
+land<-c("percent_ag","elevation","nutri_reten_constrained")
+distance<-c("dist_road","dist_admarc")
+demo<-c("hhsize","hh_age","hh_gender","asset")
+
+model3_variables<-c(weather,access,asset1,land,distance,demo)
+model2_variables<-c(weather,access,asset1,land,distance)
+model1_variables<-c(weather,access,land,distance)
+
+# goal : combine variables at different levels using pastes 
+# output: variables lists at different levels, TA_vars, ipczone vars, etc. 
+
+for (level in levels){
+  # assign levels of variables group
+  group_var_name<-paste(level,"vars",sep="_")
+  assign(group_var_name,c())
+  
+  for(var in model3_variables){
+    temp<-paste(level,var,sep = "_")
+    new<-append(get(group_var_name),temp)
+    assign(group_var_name,new)
+  }
+}
+
+### 1. Linear/tobit Results 
+
+# Create the formulas using the formula_compose function. 
+
+rcsi_formula<-formula_compose("clust_RCSI",clust_vars)
+logFCS_formula<-formula_compose("clust_logFCS",clust_vars)
+HDDS_formula<-formula_compose("clust_HDDS",clust_vars)
+
+rcsi_predictions<-linear_fit(rcsi_formula,clust_2010,clust_2013)
+logFCS_predictions<-linear_fit(logFCS_formula,clust_2010,clust_2013) 
+HDDS_predictions<-linear_fit(HDDS_formula,clust_2010,clust_2013) 
+
+rcsi_pair <- cbind(clust_2013$clust_RCSI, rcsi_predictions)
+logFCS_pair <- cbind(clust_2013$clust_logFCS, logFCS_predictions)
+HDDS_pair <- cbind(clust_2013$clust_HDDS, HDDS_predictions)
+
+
+linear_list<- list(rcsi_pair,logFCS_pair,HDDS_pair)
+lapply(linear_list, drop.na)
+cor(,)^2
+cor(clust_2013$clust_logFCS,logFCS_predictions$pred_test)^2
+cor(clust_2013$clust_HDDS,HDDS_predictions$pred_test)^2
+
+# lm_train_measure<-postResample(rcsi_predictions$pred_test,ihs2010$RCSI)
+
+
+```
+
+```{r,include=FALSE}
+#IHS2010 <- read.csv("data/IHS2010.csv")
+#IHS2013 = read.csv("data/IHS2013.csv")
+
+```
+
+```{r,include=FALSE}
+# train= clust_2010 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              clust_logFCS,clust_RCSI,clust_HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# test= clust_2013 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              clust_logFCS,clust_RCSI,clust_HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# write.csv(train,"train.csv")
+# write.csv(test,"test.csv")
+
+```
+
+```{r,include=FALSE}
+# library(dplyr)
+# trainHH= IHS2010 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              logFCS,RCSI,HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# testHH= IHS2013 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              logFCS,RCSI,HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# write.csv(trainHH,"trainhh.csv")
+# write.csv(testHH,"testhh.csv")
+
+```
+
+```{r}
+cat("the overlapping months in 2010 and 2013 are" ,as.character(unique(clust_2013$month)))
+
+common_lhz= intersect(unique(clust_2010$fnid),unique(clust_2013$fnid))
+
+cat("and the number of overlapping ipc zones is" ,length(common_lhz))
+```
+```{r,include=FALSE}
+
+string=c()
+for (i in 1:length(common_lhz)){
+  st1 <- paste("gen lhz",i,sep="")
+  st2 <- paste(st1,"= 1 if fnid==")
+  st3<-paste(st2,as.character(common_lhz)[i])
+  string<-append(string,st3)
+}
+string
+write.table(string, "~/Desktop/statadum.txt", sep="")
+fileConn <- file("test.out")    
+writeLines(string, fileConn)    
+close(fileConn)
+```
+
+ + Do we highlight it? 
+ + Spit out the regression tables with a full set of fixed effects added in
+ 
+```{r}
+
+library(dplyr)
+rcsi_dum <- read.csv("data/predict_dum/RCSI_predict_CLUST_dum.csv")
+hdds_dum <- read.csv("data/predict_dum/HDDS_predict_CLUST_dum.csv")
+logFCS_dum <- read.csv("data/predict_dum/logFCS_predict_CLUST_dum.csv")
+
+
+rcsi <- read.csv("data/predict_dum/RCSI_predict_CLUST.csv")
+hdds <- read.csv("data/predict_dum/HDDS_predict_CLUST.csv")
+logFCS <- read.csv("data/predict_dum/logFCS_predict_CLUST.csv")
+
+
+```
+
+b.	Scatter plots (predict vs. actual) 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+actuals<-cbind(logFCS_dum[1],rcsi_dum[1],hdds_dum[1])
+colnames(actuals)<-c("logFCS_cluster","RCSI_cluster","HDDS_cluster")
+
+pred<-cbind(logFCS[2],rcsi[2],hdds[2])
+colnames(pred)<-c("logFCS_pred","RCSI_pred","HDDS_pred")
+
+pred_dum<-cbind(logFCS_dum[2],rcsi_dum[2],hdds_dum[2])
+colnames(pred_dum)<-c("logFCS_pred_dum","RCSI_pred_dum","HDDS_pred_dum")
+df<-cbind(actuals,pred,pred_dum)
+
+
+cor(df$logFCS_cluster,df$logFCS_pred)^2
+cor(df$RCSI_cluster,df$RCSI_pred)^2
+cor(df$HDDS_cluster,df$HDDS_pred)^2
+
+
+```
+
+```{r}
+library("ggpubr")
+ggscatter(df, x ="logFCS_cluster" , y = "logFCS_pred",
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = FALSE, cor.method = "pearson",panel.label = "R squares ",
+          xlab = "actual", ylab = "predict")
+
+ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+ggscatter(d, x ="RCSI_cluster" , y = "RCSI_pred",
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "actual", ylab = "predict")
+
+ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+ggscatter(d, x ="HDDS_cluster" , y = "HDDS_pred",
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = FALSE, cor.method = "pearson",
+          xlab = "actual", ylab = "predict")
+
+ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+
+```
+
+```{r}
+
+```
+
+```{r}
+ggplot(d, aes(logFCS_cluster, logFCS_pred )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +annotate(geom = "text", size = 5,x = 4.2, y = 3.5, label = "R squares = 0.591") 
+
+
+ggplot(d, aes(RCSI_cluster, RCSI_pred )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2")+
+  annotate(geom = "text", size = 5, x = 11, y = 1.5, label = "R squares = 0.426")
+  
+
+
+ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+ggplot(d, aes(HDDS_cluster, HDDS_pred )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+  annotate(geom = "text", size = 5, x = 6.3, y = 4.3, label = "R squares =  0.606")
+
+
+
+ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+```
+c.	Density plot (predication using different scales + household)
+    i.	Unexplored variation of household level 
+d.	 R squares of 2013 predication 
+    i.	 (with/without fixed effect) 
+e.	only what matters for 2010 is the tables (coefficients and variables) 
+f.	 Discussion of 
+g.	hit and miss tables (for the predications) 
+    i.	one is cluster to actual cluster outcomes 
+    ii.	one is cluster predication to actual household level outcomes 
+    1.	how bad it can be to just target the 
+    2.	put it in SI ? 
+    3.	2010 data
+a.	regression results 
+b.	discussion on the coefficients 
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
