@@ -26,7 +26,7 @@ r2$model_num[r2$model_num=="m1"]<-"Model 1"
 r2$model_num[r2$model_num=="m2"]<-"Model 2"
 r2$model_num[r2$model_num=="m3"]<-"Model 3"
 
-
+r2
 
 ord <- c("IPC Zone","TA","Cluster")
 r2$level <- factor(r2$level,levels=ord)
