@@ -5,37 +5,204 @@ output: word_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8) 
+
 ```
 
 
-1.	summary stats (pooled data of 2010 and 2013)
-  a.	FS by month plot 
-
-  b.	bar chart of variation 
-
-2.	Result of 2013 prediction 
-
-a.	Fixed effects (cluster, month) 
-+ what set of dummies to add in ? 
 
 ```{r,include=FALSE}
 source("function/linear.R")
 source("function/formula.R")
+source("function/R2Compute.R")
+source("function/R2ComputeDF.R")
+
 library("dplyr")
+library("ggplot2")
 ``` 
 
 ```{r,include=FALSE}
 clust_2010 <- read.csv("data/clust_2010.csv")
 clust_2013 = read.csv("data/clust_2013.csv")
 
+coord13 <- clust_2013 %>% 
+  select(clust,fnid)
+
+
+coord10 <- clust_2010 %>% 
+  select(clust,fnid)
+
+coord <- bind_rows(coord10,coord13)
+colnames(coord) <- c("ea_id","fnid")
 
 ```
+
+
+1.	summary stats (pooled data of 2010 and 2013)
+  a.	FS by month plot 
+
+```{r,include= FALSE}
+malawi_hh<- read.csv("data/Malawi_aggregate.csv")
+malawi_sub = malawi_hh %>% 
+dplyr::filter(FS_year < 2015)
+
+malawi_join<- dplyr::left_join(malawi_sub, coord, by = "ea_id")
+
+malawi_13= malawi_hh %>% 
+dplyr::filter(FS_year == 2013)
+
+malawi_13_fs = malawi_sub %>% 
+  select(rCSI,FCS,HDDS)
+
+
+malawi_13_fs_wide = malawi_13_fs %>% 
+  dplyr::mutate( logFCS = log(FCS))
+
+malawi_13_fs_wide =  malawi_13_fs_wide %>%  select(-FCS)
+
+long_malawi13 = malawi_13_fs_wide %>% tidyr::gather()
+long_malawi13["no"] =1
+long_malawi13["level"] ="Household Actual"
+
+long_FCS_hh = long_malawi13   %>%  filter(key=="logFCS")
+long_RCSI_hh = long_malawi13   %>%  filter(key=="rCSI")
+long_HDDS_hh = long_malawi13   %>%  filter(key=="HDDS")
+
+long_FCS_hh = long_FCS_hh   %>%  select(-key)
+long_RCSI_hh = long_RCSI_hh   %>%  select(-key)
+long_HDDS_hh = long_HDDS_hh   %>%  select(-key)
+
+colnames(long_FCS_hh)[1] <- "logFCS"
+colnames(long_RCSI_hh)[1] <- "RCSI"
+colnames(long_HDDS_hh)[1] <- "HDDS"
+
+
+
+```
+
+```{r,echo=FALSE}
+data = malawi_sub %>% 
+  select(rCSI,FCS,HDDS,FS_month)
+data<-as.data.frame(data)
+data$rCSI[data$rCSI>42]<-42
+data<-data[data$HDDS!=0,]
+
+
+short_data<-aggregate(cbind(rCSI,FCS,HDDS)~FS_month,data=data, mean)
+library(reshape2)
+long_data<- melt(short_data,na.rm=TRUE,id.vars = c("FS_month"),measure.vars = c("rCSI","FCS","HDDS"))
+
+colnames(long_data)<-c("month","measure","Food_security")
+long_data$months<-as.factor(long_data$month)
+
+
+FCS_long<-as.data.frame(long_data[long_data$measure=="FCS",])
+
+p<-ggplot(as.data.frame(long_data[long_data$measure!="FCS",]),aes(x=months,color=measure,y=Food_security,shape = measure,group=measure)) + theme_bw() + geom_path(size=2.5)+ geom_point(size=5)  
+# adding the relative humidity data, transformed to match roughly the range of the temperature
+p <- p +geom_line(size=2.5,data=FCS_long,aes(y = Food_security/12.3, colour = measure))  + geom_point(data=FCS_long,aes(y = Food_security/12.3, colour = measure),size=5)  
+
+
+# now adding the secondary axis, following the example in the help file ?scale_y_continuous
+# and, very important, reverting the above transformation
+p <- p + scale_y_continuous(sec.axis = sec_axis(~.*12.3, name = "Food consumption scores"))
+
+# modifying colours and theme options
+#  p <- p + scale_colour_manual(values = c("blue", "red"))
+p <- p + labs(y = "HDDS and RCSI scores",
+              x = "Month",
+              colour = "Food Security Measures",
+              shape= " ")
+p
+```
+
+  b.	bar chart of variation 
+```{r}
+data = malawi_join %>% 
+  select(rCSI,FCS,HDDS,FS_month,fnid,TA_names,ea_id)
+
+
+data$month_clust <-interaction(data$FS_month,data$ea_id)
+data$rCSI[data$rCSI>42]<-42
+data<-data[data$HDDS!=0,]
+
+colnames(data)[4] <-"Month"
+colnames(data)[5] <-"IPC"
+colnames(data)[6] <-"TA"
+colnames(data)[7] <-"Cluster"
+colnames(data)[8] <-"month_clust"
+
+ 
+
+#	Maybe a bar chart of variation in FS security measures (month, IPCzone, TA, cluster, month x cluster)
+
+r2 = matrix(NA,3,5)
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Month),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,1]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(IPC),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,2]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(TA),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,3]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Cluster),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,4]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(month_clust),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,5]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+r2 <-as.data.frame(r2)
+
+colnames(r2)<-c("Month","IPC","TA","Cluster","Cluster_by_month")
+rownames(r2)<-c("RCSI","FCS","HDDS")
+#r2$measure<-c("RCSI","FCS","HDDS")
+
+
+long_r2<- melt(t(r2),na.rm=TRUE,measure.vars =c("RCSI","FCS","HDDS"))
+long_r2<-long_r2[long_r2$Var1!="measure",]
+
+colnames(long_r2)<-c("variation","measure","rsquares")
+
+ar<-as.character(long_r2$rsquares)
+long_r2$ar<-as.numeric(ar)
+
+
+# RCSI_r2_fe =  .22320556
+# HDDS_r2_fe =  .30987621
+# logFCS_r2_fe =  .33045673
+
+
+p<-ggplot(long_r2, aes(variation,ar)) +geom_bar(stat = "identity",position = "dodge",aes(fill = measure))
+
+p <- p + labs(y = "R squares",
+              x = " ",
+              colour = "Food Security Measures",
+              shape= " ")
+
+p <- p+ theme_bw() 
+p <- p + theme(text = element_text(size=22)) 
+p               
+
+```
+
+
 
 ```{r,include=FALSE}
 
 # levels 
 levels<-c("ipczone","TA","clust")
-
 
 # variables 
 weather<-c("L12raincytot","L12day1rain","L12maxdays","floodmax")
@@ -80,23 +247,237 @@ rcsi_pair <- cbind(clust_2013$clust_RCSI, rcsi_predictions)
 logFCS_pair <- cbind(clust_2013$clust_logFCS, logFCS_predictions)
 HDDS_pair <- cbind(clust_2013$clust_HDDS, HDDS_predictions)
 
+colnames(rcsi_pair) <- c("actual","predict")
+colnames(logFCS_pair) <- c("actual","predict")
+colnames(HDDS_pair) <- c("actual","predict")
+
 
 linear_list<- list(rcsi_pair,logFCS_pair,HDDS_pair)
-lapply(linear_list, drop.na)
-cor(,)^2
-cor(clust_2013$clust_logFCS,logFCS_predictions$pred_test)^2
-cor(clust_2013$clust_HDDS,HDDS_predictions$pred_test)^2
 
-# lm_train_measure<-postResample(rcsi_predictions$pred_test,ihs2010$RCSI)
 
+r2list<- sapply(linear_list,R2Compute)
+ r2list= format(r2list, digits=3, nsmall=2)
+```
+
+
+
+2.	Result of 2013 prediction 
+
+a.	Scatter plots (predict vs. actual) 
+```{r,echo=FALSE}
+ggplot(as.data.frame(rcsi_pair), aes(actual, predict )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+  annotate(geom = "text", size = 5, x = 11, y = 1.5, label = paste("R Squares = ",r2list[1],sep = " ")) +
+  labs(x = "Cluster Average RCSI (Actual)", y = "Cluster Average RCSI (Predicted)")
+
+
+ggplot(as.data.frame(logFCS_pair), aes(actual, predict)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+  annotate(geom = "text", size = 5, x = 4.28, y = 3.75, label = paste("R Squares = ",r2list[2],sep = " ")) +
+  labs(x = "Cluster Average logFCS (Actual)", y = "Cluster Average logFCS (Predicted)")
+
+ 
+
+ggplot(as.data.frame(HDDS_pair), aes(actual, predict)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2")+
+  annotate(geom = "text", size = 5, x = 6.5, y = 4.5, label = paste("R Squares = ",r2list[3],sep = " "))+
+  labs(x = "Cluster Average HDDS (Actual)", y = "Cluster Average HDDS (Predicted)")
 
 ```
+b.	Density plot (predication using different scales + household)
+    i.	Unexplored variation of household level 
+```{r,echo=FALSE}    
+csv_list <- list.files(path="data/all_predict", 
+                    pattern = "csv$",
+                    full.names=TRUE)
+dfnames<-csv_list
+
+# remove irregulars in the file names, 
+pattern<-c("data/all_predict/","clust_",".csv")
+for (i in 1:length(pattern)) {
+  dfnames <- gsub(pattern[i],"", dfnames)
+}
+
+
+
+list2env(
+  lapply(setNames(csv_list, make.names(dfnames)), 
+         function(i){read.csv(i)}), envir = .GlobalEnv)
+
+predict_df<-cbind(logFCS_predict_m3[1],RCSI_predict_m3[1],HDDS_predict_m3[1])
+
+for (i in 1:length(dfnames)){
+  # exclude unneeded cols  
+  temp <- get(dfnames[i])
+  predict_df<-cbind(predict_df,temp[2])
+}
+
+
+
+
+malawi<- read.csv("data/cluster_fs.csv")
+ 
+logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC.csv")
+HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC.csv")
+RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC.csv")
+
+ 
+    
+FCS_data<-cbind(predict_df$clust_logFCS_ipczone_predict_m3,predict_df$clust_logFCS_TA_predict_m3,predict_df$clust_logFCS_clust_predict_m3,predict_df$clust_logFCS,logFCS_IPC$clust_logFCS_predict_ipc)
+colnames(FCS_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_fcs<- melt(FCS_data,na.rm=TRUE)
+colnames(long_fcs)<-c("no","level","logFCS")
+plot_long<- long_fcs[long_fcs$level != "IPC_value_only",]
+plot_long_ipc<- long_fcs[long_fcs$level == "IPC_value_only",]
+
+
+plot_long= dplyr::bind_rows(plot_long, long_FCS_hh)
+
+p = ggplot(as.data.frame(plot_long),aes(x=logFCS,color=level)) + geom_density(alpha=0.1) +xlim(2.8, 4.9) +
+geom_vline(xintercept=log(28),linetype=2) + geom_vline(xintercept=log(42),linetype=2)+
+  stat_density(data=plot_long_ipc,aes(x=logFCS, y=..scaled..*3.5,color=level)) + scale_y_continuous(sec.axis = sec_axis(~.*28, name = " density (IPC value only) ")) +  
+ theme_bw()
+
+ p
+
+HDDS_data<-cbind(predict_df$clust_HDDS_ipczone_predict_m3,predict_df$clust_HDDS_TA_predict_m3,predict_df$clust_HDDS_clust_predict_m3,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_HDDS<- melt(HDDS_data,na.rm=TRUE)
+colnames(long_HDDS)<-c("no","level","HDDS")
+plot_long<- long_HDDS[long_HDDS$level != "IPC_value_only",]
+plot_long_ipc<- long_HDDS[long_HDDS$level == "IPC_value_only",]
+
+plot_long= dplyr::bind_rows(plot_long, long_HDDS_hh)
+
+
+p= ggplot(as.data.frame(plot_long),aes(x=HDDS, color=level))+ geom_density(alpha=0.25,show.legend = TRUE) +
+  xlim(1.5, 7.6) + geom_vline(xintercept=3,linetype=2) + geom_vline(xintercept=6,linetype=2) +
+  stat_density(data=plot_long_ipc,aes(x=HDDS,y=..scaled..*1.1,color=level)) +
+  scale_y_continuous(name= "density",sec.axis = sec_axis(~.*12, name = "density (IPC value only) "))  +  theme_bw()
+
+p
+         
+
+# rcsi P1 < 4
+#P2 = 4-17
+#P3 = 17-42
+#P4/5 > 42
+RCSI_data<-cbind(predict_df$clust_RCSI_ipczone_predict_m3,predict_df$clust_RCSI_TA_predict_m3,predict_df$clust_RCSI_clust_predict_m3,predict_df$clust_RCSI,RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_rcsi<- melt(RCSI_data,na.rm=TRUE)
+colnames(long_rcsi)<-c("no","level","RCSI")
+plot_long<- long_rcsi[long_rcsi$level != "IPC_value_only",]
+plot_long_ipc<- long_rcsi[long_rcsi$level == "IPC_value_only",]
+
+plot_long= dplyr::bind_rows(plot_long, long_RCSI_hh)
+
+
+p = ggplot(as.data.frame(plot_long),aes(x=RCSI, color=level))+ stat_density(data=plot_long_ipc,aes(x=RCSI,y=..scaled../2.3,color=level)) + geom_density(alpha=0.25)+xlim(0, 45) + 
+  geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)+
+   scale_y_continuous(name= "density",sec.axis = sec_axis(~.*3.125, name = "density (IPC value only) ")) +
+  theme_bw()
+p
+``` 
+
+    
+  
+    
+d.	 R squares of 2013 predication 
 
 ```{r,include=FALSE}
-#IHS2010 <- read.csv("data/IHS2010.csv")
-#IHS2013 = read.csv("data/IHS2013.csv")
+FCS_data_model3 =  FCS_data 
 
-```
+
+FCS_data_model2<-cbind(predict_df$clust_logFCS_ipczone_predict_m2,predict_df$clust_logFCS_TA_predict_m2,predict_df$clust_logFCS_clust_predict_m2,predict_df$clust_logFCS,logFCS_IPC$clust_logFCS_predict_ipc)
+colnames(FCS_data_model2)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+
+
+FCS_data_model1<-cbind(predict_df$clust_logFCS_ipczone_predict_m1,predict_df$clust_logFCS_TA_predict_m1,predict_df$clust_logFCS_clust_predict_m1,predict_df$clust_logFCS,logFCS_IPC$clust_logFCS_predict_ipc)
+colnames(FCS_data_model1)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+FCS_List<-list(FCS_data_model1,FCS_data_model2,FCS_data_model3)
+
+HDDS_data_model3 =  HDDS_data 
+
+
+HDDS_data_model2<-cbind(predict_df$clust_HDDS_ipczone_predict_m2,predict_df$clust_HDDS_TA_predict_m2,predict_df$clust_HDDS_clust_predict_m2,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data_model2)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+
+
+HDDS_data_model1<-cbind(predict_df$clust_HDDS_ipczone_predict_m1,predict_df$clust_HDDS_TA_predict_m1,predict_df$clust_HDDS_clust_predict_m1,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data_model1)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+HDDS_List<-list(HDDS_data_model1,HDDS_data_model2,HDDS_data_model3)
+
+
+RCSI_data_model3 =  RCSI_data 
+
+
+RCSI_data_model2<-cbind(predict_df$clust_RCSI_ipczone_predict_m2,predict_df$clust_RCSI_TA_predict_m2,predict_df$clust_RCSI_clust_predict_m2,predict_df$clust_RCSI,RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data_model2)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+
+
+RCSI_data_model1<-cbind(predict_df$clust_RCSI_ipczone_predict_m1,predict_df$clust_RCSI_TA_predict_m1,predict_df$clust_RCSI_clust_predict_m1,predict_df$clust_RCSI,RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data_model1)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+RCSI_List<-list(RCSI_data_model1,RCSI_data_model2,RCSI_data_model3)
+source("function/R2Compute.R")
+source("function/R2ComputeDF.R")
+
+
+r2mat_RCSI<- sapply(RCSI_List,R2ComputeDF)
+r2mat_HDDS<- sapply(HDDS_List,R2ComputeDF)
+r2mat_FCS<- sapply(FCS_List,R2ComputeDF)
+
+colnames(r2mat_RCSI) = c("m1","m2","m3")
+colnames(r2mat_HDDS) = c("m1","m2","m3")
+colnames(r2mat_FCS) = c("m1","m2","m3")
+
+rownames(r2mat_RCSI) = c("IPC_zone","TA","cluster","IPC_value_only")
+rownames(r2mat_HDDS) = c("IPC_zone","TA","cluster","IPC_value_only")
+rownames(r2mat_FCS) = c("IPC_zone","TA","cluster","IPC_value_only")
+
+
+r2matlist<-list(r2mat_FCS,r2mat_HDDS,r2mat_RCSI)
+
+r2matlist<-lapply(r2matlist,as.data.frame)
+r2matlist<-lapply(r2matlist,tibble::rownames_to_column)
+
+
+
+r2mat_FCS %>% tidyr::gather(value = model )
+``` 
+    
+    
+    
+
+
+
+
+f.	 Discussion of classification 
+g.  hit and miss tables (for the predications) 
+    i.	one is cluster to actual cluster outcomes 
+    ii.	one is cluster predication to actual household level outcomes 
+    1.	how bad it can be to just target the 
+    2.	put it in SI ? 
+3.	2010 data (only what matters for 2010 is the tables (coefficients and variables))
+
+a.	regression results 
+b.	discussion on the coefficients 
+
+
+
+
+
 
 ```{r,include=FALSE}
 # train= clust_2010 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
@@ -135,13 +516,15 @@ cor(clust_2013$clust_HDDS,HDDS_predictions$pred_test)^2
 
 ```
 
-```{r}
+```{r,include= FALSE}
 cat("the overlapping months in 2010 and 2013 are" ,as.character(unique(clust_2013$month)))
 
 common_lhz= intersect(unique(clust_2010$fnid),unique(clust_2013$fnid))
 
 cat("and the number of overlapping ipc zones is" ,length(common_lhz))
 ```
+
+
 ```{r,include=FALSE}
 
 string=c()
@@ -158,123 +541,31 @@ writeLines(string, fileConn)
 close(fileConn)
 ```
 
- + Do we highlight it? 
- + Spit out the regression tables with a full set of fixed effects added in
- 
 ```{r}
-
-library(dplyr)
-rcsi_dum <- read.csv("data/predict_dum/RCSI_predict_CLUST_dum.csv")
-hdds_dum <- read.csv("data/predict_dum/HDDS_predict_CLUST_dum.csv")
-logFCS_dum <- read.csv("data/predict_dum/logFCS_predict_CLUST_dum.csv")
-
-
-rcsi <- read.csv("data/predict_dum/RCSI_predict_CLUST.csv")
-hdds <- read.csv("data/predict_dum/HDDS_predict_CLUST.csv")
-logFCS <- read.csv("data/predict_dum/logFCS_predict_CLUST.csv")
+# library("ggpubr")
+# ggscatter(logFCS_pair, x = "actual", y = "predict",
+#           add = "reg.line", conf.int = TRUE, 
+#           cor.coef = FALSE, cor.method = "pearson",
+#           xlab = "actual", ylab = "predict")
+# 
+# ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+#        dpi = 1000, limitsize = TRUE)
+# 
+# ggscatter(d, x ="RCSI_cluster" , y = "RCSI_pred",
+#           add = "reg.line", conf.int = TRUE, 
+#           cor.coef = TRUE, cor.method = "pearson",
+#           xlab = "actual", ylab = "predict")
+# 
+# ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+#        dpi = 1000, limitsize = TRUE)
+# 
+# ggscatter(d, x ="HDDS_cluster" , y = "HDDS_pred",
+#           add = "reg.line", conf.int = TRUE, 
+#           cor.coef = FALSE, cor.method = "pearson",
+#           xlab = "actual", ylab = "predict")
+# 
+# ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+#        dpi = 1000, limitsize = TRUE)
 
 
 ```
-
-b.	Scatter plots (predict vs. actual) 
-
-```{r}
-library(dplyr)
-library(ggplot2)
-
-actuals<-cbind(logFCS_dum[1],rcsi_dum[1],hdds_dum[1])
-colnames(actuals)<-c("logFCS_cluster","RCSI_cluster","HDDS_cluster")
-
-pred<-cbind(logFCS[2],rcsi[2],hdds[2])
-colnames(pred)<-c("logFCS_pred","RCSI_pred","HDDS_pred")
-
-pred_dum<-cbind(logFCS_dum[2],rcsi_dum[2],hdds_dum[2])
-colnames(pred_dum)<-c("logFCS_pred_dum","RCSI_pred_dum","HDDS_pred_dum")
-df<-cbind(actuals,pred,pred_dum)
-
-
-cor(df$logFCS_cluster,df$logFCS_pred)^2
-cor(df$RCSI_cluster,df$RCSI_pred)^2
-cor(df$HDDS_cluster,df$HDDS_pred)^2
-
-
-```
-
-```{r}
-library("ggpubr")
-ggscatter(df, x ="logFCS_cluster" , y = "logFCS_pred",
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = FALSE, cor.method = "pearson",panel.label = "R squares ",
-          xlab = "actual", ylab = "predict")
-
-ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-       dpi = 1000, limitsize = TRUE)
-
-ggscatter(d, x ="RCSI_cluster" , y = "RCSI_pred",
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "actual", ylab = "predict")
-
-ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-       dpi = 1000, limitsize = TRUE)
-
-ggscatter(d, x ="HDDS_cluster" , y = "HDDS_pred",
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = FALSE, cor.method = "pearson",
-          xlab = "actual", ylab = "predict")
-
-ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-       dpi = 1000, limitsize = TRUE)
-
-
-```
-
-```{r}
-
-```
-
-```{r}
-ggplot(d, aes(logFCS_cluster, logFCS_pred )) +
-  geom_point(shape = 16, size = 3, show.legend = FALSE) +
-  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2") +annotate(geom = "text", size = 5,x = 4.2, y = 3.5, label = "R squares = 0.591") 
-
-
-ggplot(d, aes(RCSI_cluster, RCSI_pred )) +
-  geom_point(shape = 16, size = 3, show.legend = FALSE) +
-  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2")+
-  annotate(geom = "text", size = 5, x = 11, y = 1.5, label = "R squares = 0.426")
-  
-
-
-ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-       dpi = 1000, limitsize = TRUE)
-
-ggplot(d, aes(HDDS_cluster, HDDS_pred )) +
-  geom_point(shape = 16, size = 3, show.legend = FALSE) +
-  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2") +
-  annotate(geom = "text", size = 5, x = 6.3, y = 4.3, label = "R squares =  0.606")
-
-
-
-ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-       dpi = 1000, limitsize = TRUE)
-```
-c.	Density plot (predication using different scales + household)
-    i.	Unexplored variation of household level 
-d.	 R squares of 2013 predication 
-    i.	 (with/without fixed effect) 
-e.	only what matters for 2010 is the tables (coefficients and variables) 
-f.	 Discussion of 
-g.	hit and miss tables (for the predications) 
-    i.	one is cluster to actual cluster outcomes 
-    ii.	one is cluster predication to actual household level outcomes 
-    1.	how bad it can be to just target the 
-    2.	put it in SI ? 
-    3.	2010 data
-a.	regression results 
-b.	discussion on the coefficients 
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
