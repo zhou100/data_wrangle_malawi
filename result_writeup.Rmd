@@ -5,7 +5,7 @@ output: word_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(fig.width=18, fig.height=15) 
+knitr::opts_chunk$set(fig.width=10, fig.height=5) 
 
 ```
 
@@ -75,8 +75,6 @@ long_HDDS_hh = long_HDDS_hh   %>%  select(-key)
 colnames(long_FCS_hh)[1] <- "logFCS"
 colnames(long_RCSI_hh)[1] <- "RCSI"
 colnames(long_HDDS_hh)[1] <- "HDDS"
-
-
 
 ```
 
@@ -496,7 +494,7 @@ g.  hit and miss tables (for the predications)
     i.	one is cluster to actual cluster outcomes 
     
     
-```{r}
+```{r,echo=FALSE}
 library(caret)
 logFCS <- read.csv("data/all_predict/clust_logFCS_predict_clust_m3.csv")
 HDDS <- read.csv("data/all_predict/clust_HDDS_predict_clust_m3.csv")
@@ -622,11 +620,6 @@ confusionMatrix(RCSI$cat_RCSI_predict,RCSI$cat_RCSI)
 3.	2010 data (only what matters for 2010 is the tables (coefficients and variables))
 
 a.	regression results 
-```{r}
-
-
-```
-
 
 
 
@@ -700,7 +693,7 @@ writeLines(string, fileConn)
 close(fileConn)
 ```
 
-```{r}
+```{r,include= FALSE}
 # library("ggpubr")
 # ggscatter(logFCS_pair, x = "actual", y = "predict",
 #           add = "reg.line", conf.int = TRUE, 
