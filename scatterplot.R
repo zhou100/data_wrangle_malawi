@@ -46,7 +46,7 @@ d<-cbind(actuals,pred)
 ggplot(d, aes(logFCS_cluster, logFCS_pred )) +
   geom_point(shape = 16, size = 3, show.legend = FALSE) +
   theme_minimal() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2") +annotate(geom = "text", size = 5,x = 4.2, y = 3.5, label = "R squares = 0.591") 
+  scale_color_brewer(palette="Dark2") +annotate(geom = "text", size = 5,x = 4.2, y = 3.5, label = "R squares = 0.579") 
 
 ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
        dpi = 1000, limitsize = TRUE)
@@ -56,7 +56,7 @@ ggplot(d, aes(RCSI_cluster, RCSI_pred )) +
   geom_point(shape = 16, size = 3, show.legend = FALSE) +
   theme_minimal() + geom_abline(intercept = 0, slope = 1)+
   scale_color_brewer(palette="Dark2")+
-  annotate(geom = "text", size = 5, x = 11, y = 1.5, label = "R squares = 0.426")
+  annotate(geom = "text", size = 5, x = 11, y = 1.5, label = "R squares = 0.160")
   
 
 
@@ -67,7 +67,7 @@ ggplot(d, aes(HDDS_cluster, HDDS_pred )) +
   geom_point(shape = 16, size = 3, show.legend = FALSE) +
   theme_minimal() + geom_abline(intercept = 0, slope = 1)+
   scale_color_brewer(palette="Dark2") +
-  annotate(geom = "text", size = 5, x = 6.3, y = 4.3, label = "R squares =  0.606")
+  annotate(geom = "text", size = 5, x = 6.3, y = 4.3, label = "R squares =  0.627")
 
 
 
