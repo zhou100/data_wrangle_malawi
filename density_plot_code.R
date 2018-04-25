@@ -196,4 +196,43 @@ poor_rcsi<- measure_only[measure_only$RCSI>40,]
 write.csv(poor_rcsi,"data/poor_rcsi.csv")
 
 
+actuals<-cbind(logFCS_predict_m3[1],RCSI_predict_m3[1],HDDS_predict_m3[1])
+colnames(actuals)<-c("logFCS_cluster","RCSI_cluster","HDDS_cluster")
 
+pred<-cbind(logFCS_predict_m3[2],RCSI_predict_m3[2],HDDS_predict_m3[2])
+colnames(pred)<-c("logFCS_pred","RCSI_pred","HDDS_pred")
+
+
+geom_point(x=actuals[1],y=pred[1],aes(x=logFCS_cluster) ) 
+
+d<-cbind(actuals,pred)
+ggplot(d, aes(logFCS_cluster, logFCS_pred )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2")
+
+
+ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+
+ggplot(d, aes(RCSI_cluster, RCSI_pred )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2")
+
+
+ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+ggplot(d, aes(HDDS_cluster, HDDS_pred )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+
+
+ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+
+ 

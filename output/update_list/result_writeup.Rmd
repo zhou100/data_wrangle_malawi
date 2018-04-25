@@ -1,0 +1,48 @@
+---
+title: "Result_writeup"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Get this done by this Sunday morning so Kathy can get the writing done on Sunday 
+
+
+1.	summary stats (pooled data of 2010 and 2013)
+  a.	FS by month plot 
+
+  b.	bar chart of variation 
+
+2.	Result of 2013 prediction 
+
+a.	Fixed effects (cluster, month) 
++ what set of dummies to add in ? 
+
+```{r,include=FALSE}
+library(readr)
+clust_2010 <- read_csv("data/clust_2010.csv")
+clust_2013 = read_csv("data/clust_2013.csv")
+
+```
+ + Do we highlight it? 
+ + Spit out the regression tables with a full set of fixed effects added in
+ 
+
+b.	Scatter plots (predict vs. actual) 
+c.	Density plot (predication using different scales + household)
+    i.	Unexplored variation of household level 
+d.	 R squares of 2013 predication 
+    i.	 (with/without fixed effect) 
+e.	only what matters for 2010 is the tables (coefficients and variables) 
+f.	 Discussion of 
+g.	hit and miss tables (for the predications) 
+    i.	one is cluster to actual cluster outcomes 
+    ii.	one is cluster predication to actual household level outcomes 
+    1.	how bad it can be to just target the 
+    2.	put it in SI ? 
+    3.	2010 data
+a.	regression results 
+b.	discussion on the coefficients 
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

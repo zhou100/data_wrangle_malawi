@@ -1,0 +1,820 @@
+---
+title: "Result_writeup"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=10, fig.height=5) 
+
+```
+
+
+
+```{r,include=FALSE}
+source("function/linear.R")
+source("function/formula.R")
+source("function/R2Compute.R")
+source("function/R2ComputeDF.R")
+
+library("dplyr")
+library("ggplot2")
+``` 
+
+```{r,include=FALSE}
+clust_2010 <- read.csv("data/clust_2010.csv")
+clust_2013 = read.csv("data/clust_2013.csv")
+
+coord13 <- clust_2013 %>% 
+  select(clust,fnid)
+
+
+coord10 <- clust_2010 %>% 
+  select(clust,fnid)
+
+coord <- bind_rows(coord10,coord13)
+colnames(coord) <- c("ea_id","fnid")
+
+```
+
+
+1.	summary stats (pooled data of 2010 and 2013)
+  a.	FS by month plot 
+
+```{r,include= FALSE}
+malawi_hh<- read.csv("data/Malawi_aggregate.csv")
+malawi_sub = malawi_hh %>% 
+dplyr::mutate( logFCS = log(FCS)) %>% 
+dplyr::filter(FS_year < 2015)
+
+malawi_join<- dplyr::left_join(malawi_sub, coord, by = "ea_id")
+
+malawi_13= malawi_hh %>% 
+dplyr::filter(FS_year == 2013)
+
+malawi_13_fs = malawi_sub %>% 
+  select(rCSI,logFCS,HDDS)
+
+long_malawi13 = malawi_13_fs %>% tidyr::gather()
+long_malawi13["no"] =1
+long_malawi13["level"] ="Household Actual"
+
+long_FCS_hh = long_malawi13   %>%  filter(key=="logFCS")
+long_RCSI_hh = long_malawi13   %>%  filter(key=="rCSI")
+long_HDDS_hh = long_malawi13   %>%  filter(key=="HDDS")
+
+long_FCS_hh = long_FCS_hh   %>%  select(-key)
+long_RCSI_hh = long_RCSI_hh   %>%  select(-key)
+long_HDDS_hh = long_HDDS_hh   %>%  select(-key)
+
+colnames(long_FCS_hh)[1] <- "logFCS"
+colnames(long_RCSI_hh)[1] <- "RCSI"
+colnames(long_HDDS_hh)[1] <- "HDDS"
+
+```
+
+```{r,echo=FALSE}
+data = malawi_sub %>% 
+  select(rCSI,logFCS,HDDS,FS_month)
+data<-as.data.frame(data)
+data$rCSI[data$rCSI>42]<-42
+data<-data[data$HDDS!=0,]
+
+
+short_data<-aggregate(cbind(rCSI,logFCS,HDDS)~FS_month,data=data, mean)
+library(reshape2)
+long_data<- melt(short_data,na.rm=TRUE,id.vars = c("FS_month"),measure.vars = c("rCSI","logFCS","HDDS"))
+
+colnames(long_data)<-c("month","measure","Food_security")
+long_data$months<-as.factor(long_data$month)
+
+
+FCS_long<-as.data.frame(long_data[long_data$measure=="logFCS",])
+
+p<-ggplot(as.data.frame(long_data[long_data$measure!="logFCS",]),aes(x=months,color=measure,y=Food_security,shape = measure,group=measure)) + theme_bw() + geom_path(size=2.5)+ geom_point(size=5)  
+# adding the relative humidity data, transformed to match roughly the range of the temperature
+p <- p +geom_line(size=2.5,data=FCS_long,aes(y = Food_security*1.1, colour = measure))  + geom_point(data=FCS_long,aes(y = Food_security*1.1, colour = measure),size=5)  
+
+
+# now adding the secondary axis, following the example in the help file ?scale_y_continuous
+# and, very important, reverting the above transformation
+p <- p + scale_y_continuous(sec.axis = sec_axis(~./1.1, name = "Food consumption scores (in log forms) "))
+
+# modifying colours and theme options
+#  p <- p + scale_colour_manual(values = c("blue", "red"))
+p <- p + labs(y = "HDDS and rCSI scores",
+              x = "Month",
+              colour = "Food Security Measures",
+              shape= " ")
+p
+```
+
+  b.	bar chart of variation 
+```{r,include=FALSE}
+data = malawi_join %>% 
+  select(rCSI,logFCS,HDDS,FS_month,fnid,TA_names,ea_id)
+
+
+data$month_clust <-interaction(data$FS_month,data$ea_id)
+data$rCSI[data$rCSI>42]<-42
+data<-data[data$HDDS!=0,]
+
+colnames(data)[4] <-"Month"
+colnames(data)[5] <-"IPC"
+colnames(data)[6] <-"TA"
+colnames(data)[7] <-"Cluster"
+colnames(data)[8] <-"Month+Cluster"
+
+ 
+#	Maybe a bar chart of variation in FS security measures (month, IPCzone, TA, cluster, month x cluster)
+
+r2 = matrix(NA,3,5)
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Month),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,1]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(IPC),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,2]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(TA),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,3]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Cluster),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,4]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Month+Cluster),data=data))
+summaries <- lapply(my_lms, summary)
+r2[,5]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+r2 <-as.data.frame(r2)
+
+colnames(r2)<-c("Month","IPC","TA","Cluster","Cluster + Month")
+rownames(r2)<-c("rCSI","logFCS","HDDS")
+#r2$measure<-c("RCSI","FCS","HDDS")
+
+
+long_r2<- melt(t(r2),na.rm=TRUE,measure.vars =c("rCSI","logFCS","HDDS"))
+long_r2<-long_r2[long_r2$Var1!="measure",]
+
+colnames(long_r2)<-c("variation","Measures","Rsquared")
+
+ar<-as.character(long_r2$Rsquared)
+long_r2$ar<-as.numeric(ar)
+
+
+# RCSI_r2_fe =  .22320556
+# HDDS_r2_fe =  .30987621
+# logFCS_r2_fe =  .33045673
+ 
+```
+
+```{r,echo=FALSE}
+p<-ggplot(long_r2, aes(variation,ar)) +geom_bar(stat = "identity",position = "dodge",aes(fill = Measures))
+
+p <- p + labs(y = "R Squared",
+              x = " ",
+              colour = "Food Security Measures",
+              shape= " ")
+
+p <- p+ theme_bw() 
+p <- p + theme(text = element_text(size=22)) 
+p = p + scale_fill_grey(start = 0.2,end = 0.8)
+p              
+```
+
+
+
+```{r,include=FALSE}
+
+# levels 
+levels<-c("ipczone","TA","clust")
+
+# variables 
+weather<-c("L12raincytot","L12day1rain","L12maxdays","floodmax")
+access<-c("lag_price","lag_thinn")
+asset1 <-c("roof","cells_own")
+land<-c("percent_ag","elevation","nutri_reten_constrained")
+distance<-c("dist_road","dist_admarc")
+demo<-c("hhsize","hh_age","hh_gender","asset")
+
+model3_variables<-c(weather,access,asset1,land,distance,demo)
+model2_variables<-c(weather,access,asset1,land,distance)
+model1_variables<-c(weather,access,land,distance)
+
+# goal : combine variables at different levels using pastes 
+# output: variables lists at different levels, TA_vars, ipczone vars, etc. 
+
+for (level in levels){
+  # assign levels of variables group
+  group_var_name<-paste(level,"vars",sep="_")
+  assign(group_var_name,c())
+  
+  for(var in model3_variables){
+    temp<-paste(level,var,sep = "_")
+    new<-append(get(group_var_name),temp)
+    assign(group_var_name,new)
+  }
+}
+
+### 1. Linear/tobit Results 
+
+# Create the formulas using the formula_compose function. 
+
+rcsi_formula<-formula_compose("clust_RCSI",clust_vars)
+logFCS_formula<-formula_compose("clust_logFCS",clust_vars)
+HDDS_formula<-formula_compose("clust_HDDS",clust_vars)
+
+rcsi_predictions<-linear_fit(rcsi_formula,clust_2010,clust_2013)
+logFCS_predictions<-linear_fit(logFCS_formula,clust_2010,clust_2013) 
+HDDS_predictions<-linear_fit(HDDS_formula,clust_2010,clust_2013) 
+
+rcsi_pair <- cbind(clust_2013$clust_RCSI, rcsi_predictions)
+logFCS_pair <- cbind(clust_2013$clust_logFCS, logFCS_predictions)
+HDDS_pair <- cbind(clust_2013$clust_HDDS, HDDS_predictions)
+
+colnames(rcsi_pair) <- c("actual","predict")
+colnames(logFCS_pair) <- c("actual","predict")
+colnames(HDDS_pair) <- c("actual","predict")
+
+
+linear_list<- list(rcsi_pair,logFCS_pair,HDDS_pair)
+
+
+r2list<- sapply(linear_list,R2Compute)
+ r2list= format(r2list, digits=3, nsmall=2)
+```
+
+
+
+2.	Result of 2013 prediction 
+
+a.	Scatter plots (predict vs. actual) 
+```{r,echo=FALSE}
+cutoff1 <- data.frame( x = c(-Inf, Inf), y = 17, cutoff = factor(17) )
+cutoff2 <- data.frame( x = c(-Inf, Inf), y = 4, cutoff = factor(4) )
+cutoff3 <- data.frame( y = c(-Inf, Inf), x = 17, cutoff = factor(17) )
+cutoff4 <- data.frame( y = c(-Inf, Inf), x = 4, cutoff = factor(4) )
+
+# 28 42 3 6 
+ggplot(as.data.frame(rcsi_pair), aes(actual, predict )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+  annotate(geom = "text", size = 5, x = 11, y = 1.5, label = paste("R Squared= ",r2list[1],sep = " ")) +
+  labs(x = "Cluster Average RCSI (Actual)", y = "Cluster Average rCSI (Predicted)") +
+  geom_line(aes( x, y, linetype = cutoff), cutoff1) +
+  geom_line(aes( x, y, linetype = cutoff), cutoff2) +
+  geom_line(aes( x, y, linetype = cutoff), cutoff3) +
+  geom_line(aes( x, y, linetype = cutoff), cutoff4) 
+
+
+
+cutoffa <- data.frame( x = c(-Inf, Inf), y =3.332, cutoff = factor(3.332) )
+cutoffb <- data.frame( x = c(-Inf, Inf), y = 3.738, cutoff = factor(3.738) )
+cutoffc <- data.frame( y = c(-Inf, Inf), x =3.332, cutoff = factor(3.332) )
+cutoffd <- data.frame( y = c(-Inf, Inf), x = 3.738, cutoff = factor(3.738) )
+
+ggplot(as.data.frame(logFCS_pair), aes(actual, predict)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+  annotate(geom = "text", size = 5, x = 4.28, y = 3, label = paste("R Squared= ",r2list[2],sep = " ")) +
+  labs(x = "Cluster Average logFCS (Actual)", y = "Cluster Average logFCS (Predicted)") + 
+  geom_line(aes( x, y, linetype = cutoff), cutoffa) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffb) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffc) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffd) 
+
+
+cutoffw <- data.frame( x = c(-Inf, Inf), y = 3, cutoff = factor(3) )
+cutoffx <- data.frame( x = c(-Inf, Inf), y = 6, cutoff = factor(6) )
+cutoffy <- data.frame( y = c(-Inf, Inf), x = 3, cutoff = factor(3) )
+cutoffz <- data.frame( y = c(-Inf, Inf), x = 6, cutoff = factor(6) )
+
+ggplot(as.data.frame(HDDS_pair), aes(actual, predict)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2")+
+  annotate(geom = "text", size = 5, x = 6.5, y = 4.5, label = paste("R Squared= ",r2list[3],sep = " "))+
+  labs(x = "Cluster Average HDDS (Actual)", y = "Cluster Average HDDS (Predicted)") +
+  geom_line(aes( x, y, linetype = cutoff), cutoffw) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffx) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffy) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffz) 
+
+
+```
+
+b.	Scatter plots (predict vs. actual) plus ipc only value 
+```{r,echo=FALSE}
+
+
+logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC.csv")
+HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC.csv")
+RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC.csv")
+
+rcsi_pair <- cbind(rcsi_pair, RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(rcsi_pair)[3] = "ipc_pred"
+
+cutoff1 <- data.frame( x = c(-Inf, Inf), y = 17, cutoff = factor(17) )
+cutoff2 <- data.frame( x = c(-Inf, Inf), y = 4, cutoff = factor(4) )
+cutoff3 <- data.frame( y = c(-Inf, Inf), x = 17, cutoff = factor(17) )
+cutoff4 <- data.frame( y = c(-Inf, Inf), x = 4, cutoff = factor(4) )
+
+# 28 42 3 6 
+ggplot(as.data.frame(rcsi_pair), aes(actual, predict )) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+  annotate(geom = "text", size = 5, x = 11, y = 1.5, label = paste("R Squared= ",r2list[1],sep = " ")) +
+  labs(x = "Cluster Average RCSI (Actual)", y = "Cluster Average rCSI (Predicted)") +
+  geom_line(aes( x, y, linetype = cutoff), cutoff1) +
+  geom_line(aes( x, y, linetype = cutoff), cutoff2) +
+  geom_line(aes( x, y, linetype = cutoff), cutoff3) +
+  geom_line(aes( x, y, linetype = cutoff), cutoff4) +
+  geom_point(data = as.data.frame(RCSI_IPC),aes(clust_RCSI, clust_RCSI_predict_ipc),shape = 1,size =6,show.legend = FALSE,na.rm = TRUE) +
+  guides(colour = guide_legend(override.aes = list(shape = 15)))
+
+
+
+
+cutoffa <- data.frame( x = c(-Inf, Inf), y =3.332, cutoff = factor(3.332) )
+cutoffb <- data.frame( x = c(-Inf, Inf), y = 3.738, cutoff = factor(3.738) )
+cutoffc <- data.frame( y = c(-Inf, Inf), x =3.332, cutoff = factor(3.332) )
+cutoffd <- data.frame( y = c(-Inf, Inf), x = 3.738, cutoff = factor(3.738) )
+
+ggplot(as.data.frame(logFCS_pair), aes(actual, predict)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2") +
+  annotate(geom = "text", size = 5, x = 4.28, y = 3, label = paste("R Squared= ",r2list[2],sep = " ")) +
+  labs(x = "Cluster Average logFCS (Actual)", y = "Cluster Average logFCS (Predicted)") + 
+  geom_line(aes( x, y, linetype = cutoff), cutoffa) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffb) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffc) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffd) 
+
+
+cutoffw <- data.frame( x = c(-Inf, Inf), y = 3, cutoff = factor(3) )
+cutoffx <- data.frame( x = c(-Inf, Inf), y = 6, cutoff = factor(6) )
+cutoffy <- data.frame( y = c(-Inf, Inf), x = 3, cutoff = factor(3) )
+cutoffz <- data.frame( y = c(-Inf, Inf), x = 6, cutoff = factor(6) )
+
+ggplot(as.data.frame(HDDS_pair), aes(actual, predict)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+  theme_minimal() + geom_abline(intercept = 0, slope = 1)+
+  scale_color_brewer(palette="Dark2")+
+  annotate(geom = "text", size = 5, x = 6.5, y = 4.5, label = paste("R Squared= ",r2list[3],sep = " "))+
+  labs(x = "Cluster Average HDDS (Actual)", y = "Cluster Average HDDS (Predicted)") +
+  geom_line(aes( x, y, linetype = cutoff), cutoffw) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffx) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffy) +
+  geom_line(aes( x, y, linetype = cutoff), cutoffz) 
+
+
+```
+
+b.	Density plot (predication using different scales + household)
+    i.	Unexplored variation of household level 
+```{r,echo=FALSE}    
+csv_list <- list.files(path="data/all_predict", 
+                    pattern = "csv$",
+                    full.names=TRUE)
+dfnames<-csv_list
+
+# remove irregulars in the file names, 
+pattern<-c("data/all_predict/","clust_",".csv")
+for (i in 1:length(pattern)) {
+  dfnames <- gsub(pattern[i],"", dfnames)
+}
+
+
+
+list2env(
+  lapply(setNames(csv_list, make.names(dfnames)), 
+         function(i){read.csv(i)}), envir = .GlobalEnv)
+
+predict_df<-cbind(logFCS_predict_m3[1],RCSI_predict_m3[1],HDDS_predict_m3[1])
+
+for (i in 1:length(dfnames)){
+  # exclude unneeded cols  
+  temp <- get(dfnames[i])
+  predict_df<-cbind(predict_df,temp[2])
+}
+
+
+
+
+malawi<- read.csv("data/cluster_fs.csv")
+ 
+logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC.csv")
+HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC.csv")
+RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC.csv")
+
+ 
+    
+FCS_data<-cbind(predict_df$clust_logFCS_ipczone_predict_m3,predict_df$clust_logFCS_TA_predict_m3,predict_df$clust_logFCS_clust_predict_m3,predict_df$clust_logFCS,logFCS_IPC$clust_logFCS_predict_ipc)
+colnames(FCS_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_fcs<- melt(FCS_data,na.rm=TRUE)
+colnames(long_fcs)<-c("no","level","logFCS")
+plot_long<- long_fcs[long_fcs$level != "IPC_value_only",]
+plot_long_ipc_fcs<- long_fcs[long_fcs$level == "IPC_value_only",]
+
+
+plot_long_FCS= dplyr::bind_rows(plot_long, long_FCS_hh)
+
+
+
+HDDS_data<-cbind(predict_df$clust_HDDS_ipczone_predict_m3,predict_df$clust_HDDS_TA_predict_m3,predict_df$clust_HDDS_clust_predict_m3,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_HDDS<- melt(HDDS_data,na.rm=TRUE)
+colnames(long_HDDS)<-c("no","level","HDDS")
+plot_long<- long_HDDS[long_HDDS$level != "IPC_value_only",]
+plot_long_ipc_HDDS<- long_HDDS[long_HDDS$level == "IPC_value_only",]
+
+plot_long_HDDS= dplyr::bind_rows(plot_long, long_HDDS_hh)
+
+
+# rcsi P1 < 4
+#P2 = 4-17
+#P3 = 17-42
+#P4/5 > 42
+RCSI_data<-cbind(predict_df$clust_RCSI_ipczone_predict_m3,predict_df$clust_RCSI_TA_predict_m3,predict_df$clust_RCSI_clust_predict_m3,predict_df$clust_RCSI,RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+long_rcsi<- melt(RCSI_data,na.rm=TRUE)
+colnames(long_rcsi)<-c("no","level","RCSI")
+plot_long<- long_rcsi[long_rcsi$level != "IPC_value_only",]
+plot_long_ipc_RCSI<- long_rcsi[long_rcsi$level == "IPC_value_only",]
+
+plot_long_RCSI= dplyr::bind_rows(plot_long, long_RCSI_hh)
+
+
+``` 
+
+```{r,echo= FALSE}
+p = ggplot(as.data.frame(plot_long_FCS),aes(x=logFCS,color=level)) + geom_density(alpha=0.1) +xlim(2.8, 4.9) +
+geom_vline(xintercept=log(28),linetype=2) + geom_vline(xintercept=log(42),linetype=2)+
+  stat_density(data=plot_long_ipc_fcs,aes(x=logFCS, y=..scaled..*3.5,color=level)) + scale_y_continuous(sec.axis = sec_axis(~.*28, name = " density (IPC value only) ")) +  
+ theme_bw()
+
+ p
+ 
+ 
+ 
+p= ggplot(as.data.frame(plot_long_HDDS),aes(x=HDDS, color=level))+ geom_density(alpha=0.25,show.legend = TRUE) +
+  xlim(1.5, 7.6) + geom_vline(xintercept=3,linetype=2) + geom_vline(xintercept=6,linetype=2) +
+  stat_density(data=plot_long_ipc_HDDS,aes(x=HDDS,y=..scaled..*1.1,color=level)) +
+  scale_y_continuous(name= "density",sec.axis = sec_axis(~.*12, name = "density (IPC value only) "))  +  theme_bw()
+
+p
+ 
+
+
+p = ggplot(as.data.frame(plot_long_RCSI),aes(x=RCSI, color=level))+ stat_density(data=plot_long_ipc_RCSI,aes(x=RCSI,y=..scaled../2.3,color=level)) + geom_density(alpha=0.25)+xlim(0, 45) + 
+  geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)+
+   scale_y_continuous(name= "density",sec.axis = sec_axis(~.*3.125, name = "density (IPC value only) ")) +
+  theme_bw()
+p
+ 
+```
+    
+  
+    
+d.	 R Squaredof 2013 predication 
+
+```{r,echo=FALSE}
+FCS_data_model3 =  FCS_data 
+
+
+FCS_data_model2<-cbind(predict_df$clust_logFCS_ipczone_predict_m2,predict_df$clust_logFCS_TA_predict_m2,predict_df$clust_logFCS_clust_predict_m2,predict_df$clust_logFCS,logFCS_IPC$clust_logFCS_predict_ipc)
+colnames(FCS_data_model2)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+
+
+FCS_data_model1<-cbind(predict_df$clust_logFCS_ipczone_predict_m1,predict_df$clust_logFCS_TA_predict_m1,predict_df$clust_logFCS_clust_predict_m1,predict_df$clust_logFCS,logFCS_IPC$clust_logFCS_predict_ipc)
+colnames(FCS_data_model1)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+FCS_List<-list(FCS_data_model1,FCS_data_model2,FCS_data_model3)
+
+HDDS_data_model3 =  HDDS_data 
+
+
+HDDS_data_model2<-cbind(predict_df$clust_HDDS_ipczone_predict_m2,predict_df$clust_HDDS_TA_predict_m2,predict_df$clust_HDDS_clust_predict_m2,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data_model2)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+
+
+HDDS_data_model1<-cbind(predict_df$clust_HDDS_ipczone_predict_m1,predict_df$clust_HDDS_TA_predict_m1,predict_df$clust_HDDS_clust_predict_m1,predict_df$clust_HDDS,HDDS_IPC$clust_HDDS_predict_ipc)
+colnames(HDDS_data_model1)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+HDDS_List<-list(HDDS_data_model1,HDDS_data_model2,HDDS_data_model3)
+
+
+RCSI_data_model3 =  RCSI_data 
+
+
+RCSI_data_model2<-cbind(predict_df$clust_RCSI_ipczone_predict_m2,predict_df$clust_RCSI_TA_predict_m2,predict_df$clust_RCSI_clust_predict_m2,predict_df$clust_RCSI,RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data_model2)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+
+
+RCSI_data_model1<-cbind(predict_df$clust_RCSI_ipczone_predict_m1,predict_df$clust_RCSI_TA_predict_m1,predict_df$clust_RCSI_clust_predict_m1,predict_df$clust_RCSI,RCSI_IPC$clust_RCSI_predict_ipc)
+colnames(RCSI_data_model1)<-c("IPC_zone","TA","cluster","Actual","IPC_value_only")
+
+RCSI_List<-list(RCSI_data_model1,RCSI_data_model2,RCSI_data_model3)
+source("function/R2Compute.R")
+source("function/R2ComputeDF.R")
+
+
+r2mat_RCSI<- sapply(RCSI_List,R2ComputeDF)
+r2mat_HDDS<- sapply(HDDS_List,R2ComputeDF)
+r2mat_FCS<- sapply(FCS_List,R2ComputeDF)
+
+colnames(r2mat_RCSI) = c("m1","m2","m3")
+colnames(r2mat_HDDS) = c("m1","m2","m3")
+colnames(r2mat_FCS) = c("m1","m2","m3")
+
+rownames(r2mat_RCSI) = c("IPC_zone","TA","cluster","IPC_value_only")
+rownames(r2mat_HDDS) = c("IPC_zone","TA","cluster","IPC_value_only")
+rownames(r2mat_FCS) = c("IPC_zone","TA","cluster","IPC_value_only")
+
+
+r2matlist<-list(r2mat_FCS,r2mat_HDDS,r2mat_RCSI)
+
+r2matlist<-lapply(r2matlist,as.data.frame)
+r2matlist<-lapply(r2matlist,function(x){tibble::rownames_to_column(x,var = "level")})
+
+r2matlist<-lapply(r2matlist,function(x){tidyr::gather(data= x,key=level, value = rsquares)})
+
+r2matlist[[1]]["measure"] ="FCS"
+r2matlist[[2]]["measure"] ="HDDS"
+r2matlist[[3]]["measure"] ="RCSI"
+
+r2 = bind_rows(r2matlist[[1]],r2matlist[[2]],r2matlist[[3]])
+colnames(r2)[2] = "Model"
+
+r2$level[r2$level=="IPC_zone"]<-"IPC Zone"
+r2$level[r2$level=="cluster"]<-"Cluster"
+r2$model_num[r2$Model=="m1"]<-"Model 1"
+r2$model_num[r2$Model=="m2"]<-"Model 2"
+r2$model_num[r2$Model=="m3"]<-"Model 3"
+
+ord <- c("IPC_value_only","IPC Zone","TA","Cluster")
+r2$level <- factor(r2$level,levels=ord)
+
+r2$rsquares <-as.numeric(r2$rsquares)
+
+rplot<-ggplot(data = r2, aes(x =level, y = rsquares,colour = Model ,shape = measure)) 
+rplot<-rplot + geom_point(size=7)
+rplot<-rplot + labs( x = "Geo-spatial level", y = "R Squared")
+
+rplot <- rplot+ theme_bw() 
+rplot <- rplot + theme(text = element_text(size=22)) 
+print(rplot + scale_colour_manual(values = c("Blue", "Red", "Green")))
+
+
+``` 
+    
+    
+    
+f.	 Discussion of classification 
+g.  hit and miss tables (for the predications) 
+    i.	one is cluster to actual cluster outcomes 
+    
+    
+```{r,echo=FALSE}
+library(caret)
+logFCS <- read.csv("data/all_predict/clust_logFCS_predict_clust_m3.csv")
+HDDS <- read.csv("data/all_predict/clust_HDDS_predict_clust_m3.csv")
+RCSI <- read.csv("data/all_predict/clust_RCSI_predict_clust_m3.csv")
+
+colnames(logFCS)<-c("logFCS","logFCS_predict")
+colnames(HDDS)<-c("HDDS","HDDS_predict")
+colnames(RCSI)<-c("RCSI","RCSI_predict")
+
+#"Poor_predict","Borderline_predict","Acceptable_predict"
+# Poor_actual","Borderline_actual","Acceptable_actual"
+
+logFCS$cat_logFCS<-cut(logFCS$logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+logFCS$cat_logFCS_predict<-cut(logFCS$logFCS_predict, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+print("logFCS confusionMatrix")
+
+confusionMatrix(logFCS$cat_logFCS_predict,logFCS$cat_logFCS)
+
+# HDDS 3 6 
+HDDS$cat_HDDS<-cut(HDDS$HDDS, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+HDDS$cat_HDDS_predict<-cut(HDDS$HDDS_predict, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+print("HDDS confusionMatrix")
+confusionMatrix(HDDS$cat_HDDS_predict,HDDS$cat_HDDS)
+
+
+
+RCSI$cat_RCSI<-cut(RCSI$RCSI, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+RCSI$cat_RCSI_predict<-cut(RCSI$RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+
+print("RCSI confusionMatrix")
+
+confusionMatrix(RCSI$cat_RCSI_predict,RCSI$cat_RCSI)
+
+
+```
+    
+    
+    
+    
+    
+    
+```{r,include=FALSE}
+hh_2010 <- read.csv("data/IHS2010.csv")
+hh_2013 = read.csv("data/IHS2013.csv")
+
+
+rcsi_formula_hh<-formula_compose("RCSI",clust_vars)
+logFCS_formula_hh<-formula_compose("logFCS",clust_vars)
+HDDS_formula_hh<-formula_compose("HDDS",clust_vars)
+
+rcsi_coord <- cbind(clust_2013$clust, rcsi_predictions)
+logFCS_coord <- cbind(clust_2013$clust, logFCS_predictions)
+HDDS_coord <- cbind(clust_2013$clust, HDDS_predictions)
+
+colnames(rcsi_coord) = c("clust","rcsi_predict")
+colnames(logFCS_coord) = c("clust","logFCS_predict")
+colnames(HDDS_coord) = c("clust","HDDS_predict")
+
+
+rcsi_predictions_hh<-linear_fit(rcsi_formula_hh,hh_2010,hh_2013)
+logFCS_predictions_hh<-linear_fit(logFCS_formula_hh,hh_2010,hh_2013) 
+HDDS_predictions_hh<-linear_fit(HDDS_formula_hh,hh_2010,hh_2013) 
+
+```
+    
+    
+   ii.	cluster predication to actual household level outcomes 
+```{r,echo=FALSE}
+
+hh_actual  = hh_2010 %>% select(clust,logFCS,HDDS,RCSI) %>% na.omit()
+
+
+hh_join = dplyr::left_join(hh_actual,as.data.frame(rcsi_coord) , by = "clust")
+hh_join = dplyr::left_join(hh_join,as.data.frame(logFCS_coord) , by = "clust")
+hh_join = dplyr::left_join(hh_join,as.data.frame(HDDS_coord) , by = "clust")
+
+
+logFCS = hh_join %>% select(logFCS,logFCS_predict)
+RCSI = hh_join %>% select(RCSI,rcsi_predict)
+HDDS = hh_join %>% select(HDDS,HDDS_predict)
+
+
+colnames(logFCS)<-c("logFCS","logFCS_predict")
+colnames(HDDS)<-c("HDDS","HDDS_predict")
+colnames(RCSI)<-c("RCSI","RCSI_predict")
+
+#"Poor_predict","Borderline_predict","Acceptable_predict"
+# Poor_actual","Borderline_actual","Acceptable_actual"
+
+logFCS$cat_logFCS<-cut(logFCS$logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+logFCS$cat_logFCS_predict<-cut(logFCS$logFCS_predict, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+
+print("logFCS confusionMatrix")
+
+confusionMatrix(logFCS$cat_logFCS_predict,logFCS$cat_logFCS)
+
+
+# HDDS 3 6 
+HDDS$cat_HDDS<-cut(HDDS$HDDS, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+HDDS$cat_HDDS_predict<-cut(HDDS$HDDS_predict, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+
+print("HDDS confusionMatrix")
+confusionMatrix(HDDS$cat_HDDS_predict,HDDS$cat_HDDS)
+
+
+
+RCSI$cat_RCSI<-cut(RCSI$RCSI, c(-Inf,4,17,42,Inf),labels=c("Severe","Moderate","Mild","Food Secure"))
+RCSI$cat_RCSI_predict<-cut(RCSI$RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Severe","Moderate","Mild","Food Secure"))
+
+print("RCSI confusionMatrix")
+confusionMatrix(RCSI$cat_RCSI_predict,RCSI$cat_RCSI)
+
+```
+
+
+    1.	how bad it can be to just target the cluster level ?
+    
+    
+    2.	put it in SI ? 
+    
+    
+    
+3.	2010 data (only what matters for 2010 is the tables (coefficients and variables))
+
+a.	regression results 
+
+
+
+
+b.	discussion on the coefficients 
+
+
+
+
+
+
+```{r,include=FALSE}
+# train= clust_2010 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              clust_logFCS,clust_RCSI,clust_HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# test= clust_2013 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              clust_logFCS,clust_RCSI,clust_HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# write.csv(train,"train.csv")
+# write.csv(test,"test.csv")
+
+```
+
+```{r,include=FALSE}
+# library(dplyr)
+# trainHH= IHS2010 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              logFCS,RCSI,HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# testHH= IHS2013 %>% dplyr::select(clust_L12raincytot,clust_L12day1rain,clust_L12maxdays,clust_floodmax,clust_cells_own,
+#                             clust_price,clust_thinn,clust_roof,clust_hhsize,clust_hh_age,clust_hh_gender,clust_asset,
+#                              clust_dist_road,clust_dist_admarc,clust_percent_ag,clust_nutri_reten_constrained,clust_elevation,
+#                              logFCS,RCSI,HDDS, ipc_lag1,ipc_lag12
+#                              )
+# 
+# write.csv(trainHH,"trainhh.csv")
+# write.csv(testHH,"testhh.csv")
+
+```
+
+```{r,include= FALSE}
+cat("the overlapping months in 2010 and 2013 are" ,as.character(unique(clust_2013$month)))
+
+common_lhz= intersect(unique(clust_2010$fnid),unique(clust_2013$fnid))
+
+cat("and the number of overlapping ipc zones is" ,length(common_lhz))
+```
+
+
+```{r,include=FALSE}
+
+string=c()
+for (i in 1:length(common_lhz)){
+  st1 <- paste("gen lhz",i,sep="")
+  st2 <- paste(st1,"= 1 if fnid==")
+  st3<-paste(st2,as.character(common_lhz)[i])
+  string<-append(string,st3)
+}
+string
+write.table(string, "~/Desktop/statadum.txt", sep="")
+fileConn <- file("test.out")    
+writeLines(string, fileConn)    
+close(fileConn)
+```
+
+```{r,include= FALSE}
+# library("ggpubr")
+# ggscatter(logFCS_pair, x = "actual", y = "predict",
+#           add = "reg.line", conf.int = TRUE, 
+#           cor.coef = FALSE, cor.method = "pearson",
+#           xlab = "actual", ylab = "predict")
+# 
+# ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+#        dpi = 1000, limitsize = TRUE)
+# 
+# ggscatter(d, x ="RCSI_cluster" , y = "RCSI_pred",
+#           add = "reg.line", conf.int = TRUE, 
+#           cor.coef = TRUE, cor.method = "pearson",
+#           xlab = "actual", ylab = "predict")
+# 
+# ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+#        dpi = 1000, limitsize = TRUE)
+# 
+# ggscatter(d, x ="HDDS_cluster" , y = "HDDS_pred",
+#           add = "reg.line", conf.int = TRUE, 
+#           cor.coef = FALSE, cor.method = "pearson",
+#           xlab = "actual", ylab = "predict")
+# 
+# ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+#        dpi = 1000, limitsize = TRUE)
+
+
+```
