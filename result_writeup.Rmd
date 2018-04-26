@@ -96,13 +96,13 @@ FCS_long<-as.data.frame(long_data[long_data$measure=="logFCS",])
 p<-ggplot(as.data.frame(long_data[long_data$measure!="logFCS",]),aes(x=months,color=measure,y=Food_security,shape = measure,group=measure)) + theme_classic() + geom_path(size=2.5)+ geom_point(size=5)  
 # adding the relative humidity data, transformed to match roughly the range of the temperature
 p <- p +geom_line(size=2.5,data=FCS_long,aes(y = Food_security*1.1, colour = measure))  + geom_point(data=FCS_long,aes(y = Food_security*1.1, colour = measure),size=5)  
-p = p +   theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=17), legend.text=element_text(size=16),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
+p = p +   theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=17), legend.text=element_text(size=16),axis.text.x=element_text(size=17),axis.text.y=element_text(size=17),
                  axis.title=element_text(size=17,face="bold") ) 
  
 # now adding the secondary axis, following the example in the help file ?scale_y_continuous
 # and, very important, reverting the above transformation
 p <- p + scale_y_continuous(sec.axis = sec_axis(~./1.1, name = "Food consumption scores (in log forms) "))
-
+p = p + scale_color_grey()
 # modifying colours and theme options
 #  p <- p + scale_colour_manual(values = c("blue", "red"))
 p <- p + labs(y = "HDDS and rCSI scores",
