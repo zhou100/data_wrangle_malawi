@@ -269,20 +269,50 @@ cutoff3 <- data.frame( y = c(-Inf, Inf), x = 17, cutoff = factor(17) )
 cutoff4 <- data.frame( y = c(-Inf, Inf), x = 4, cutoff = factor(4) )
 
 # 28 42 3 6 
-ggplot(as.data.frame(rcsi_pair), aes(actual, predict )) +
+rcsi = as.data.frame(rcsi_pair)
+rcsi$predict[rcsi$predict<0 & is.na(rcsi$predict)==FALSE] =0
+
+ggplot(rcsi, aes(actual, predict )) +
   geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
   theme_classic() + geom_abline(intercept = 0, slope = 1)+
   scale_color_brewer(palette="Dark2") +
 theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
                  axis.title=element_text(size=17,face="bold") )  +
-  annotate(geom = "text", size = 7, x = 12.1, y = 1.5, label = paste("R Squared= ",r2list[1],sep = " ")) +
   labs(x = "Cluster Average RCSI (Actual)", y = "Cluster Average rCSI (Predicted)") +
   theme(plot.margin = unit(c(1, 4, 1, 1), "lines"))  +
 
   geom_line(aes( x, y, linetype = cutoff), cutoff1) +
   geom_line(aes( x, y, linetype = cutoff), cutoff2) +
   geom_line(aes( x, y, linetype = cutoff), cutoff3) +
-  geom_line(aes( x, y, linetype = cutoff), cutoff4) 
+  geom_line(aes( x, y, linetype = cutoff), cutoff4) +
+  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
+          aes(ymin=0,ymax=actual), fill="grey", alpha="0.6")+   # area 2 left 
+    geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
+          aes(ymin=4,ymax=actual), fill="grey", alpha="0.6")+   # area 2 right 
+  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
+          aes(ymin=actual,ymax=17), fill="grey", alpha="0.01")+   # area 3 right
+  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
+          aes(ymin=actual,ymax=4), fill="grey", alpha="0.01") +  # area 3 left
+  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
+          aes(ymin=4,ymax=17), fill="grey", alpha="0.4") +        # area 4 
+  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
+          aes(ymin=actual,ymax=4), fill="grey", alpha="0.3") +   # area 3 left
+  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
+          aes(ymin=actual,ymax=17), fill="grey", alpha="0.3") +            # area 3 right
+  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
+          aes(ymin=0,ymax=4), fill="grey", alpha="0.8") +           # area 1
+  
+ annotate(geom = "text", size = 7, x = 10, y = 7, label = "II") +
+ annotate(geom = "text", size = 7, x = 2.2, y = 0.5, label = "II") +
+  annotate(geom = "text", size = 7, x = 10, y = 2, label = "I") +
+   annotate(geom = "text", size = 7, x = 0.2, y = 3, label = "III") +
+  annotate(geom = "text", size = 7, x = 7, y = 10, label = "III") +
+  annotate(geom = "text", size = 7, x = 2, y = 10, label = "IV") +
+   theme(plot.margin = unit(c(1, 9, 1, 1), "lines"))  
+
+ grid.text(paste("R Squared= ",r2list[1],sep = " "), x = unit(0.77, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+  grid.text("past IPC values, precipitation,", x = unit(0.77, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+ 
 
 
 
@@ -642,11 +672,11 @@ rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),lege
 
  rplot = rplot + scale_color_grey(start = 0.8, end = 0.2) +  theme(plot.margin = unit(c(1, 2, 1, 1), "lines"))  
  rplot
- grid.text("Class 1 data contains: past IPC values, precipitation", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+ grid.text("Class 1 data contains: past IPC values, precipitation,", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
  grid.text("market prices, market access measures, and soil quality", x = unit(0.625, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
-grid.text("Class 2 data contains: share of households owing cellular phone ", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("and share of dwellings with metal versus thatch roof", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("Class 3 data contains household demographics and assets", x = unit(0.625, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("Class 2 data contains: share of households owing cellular", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("phone and share of dwellings with metal versus thatch roof", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("Class 3 data contains: household demographics and assets", x = unit(0.625, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
 
 
 ```
@@ -681,13 +711,19 @@ rplot <- rplot+ theme_classic()
 rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
                  axis.title=element_text(size=17,face="bold") ) 
 
- rplot = rplot + scale_color_grey(start = 0.8, end = 0.2) +  theme(plot.margin = unit(c(1, 18, 1, 1), "lines"))  
+ rplot = rplot + scale_color_grey(start = 0.8, end = 0.2) +  theme(plot.margin = unit(c(1, 9, 1, 1), "lines"))  
  rplot
- grid.text("Class 1 data contains past IPC values, precipitation", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
- grid.text("market price, market access and soil quality", x = unit(0.625, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
-grid.text("Class 2 data contains roof type and cellphone ownership", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("Class 3 data contains household demographics and assets", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+ grid.text("Class 1 data contains:", x = unit(0.77, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+  grid.text("past IPC values, precipitation,", x = unit(0.77, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+ grid.text("market prices, market access", x = unit(0.77, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+ grid.text("measures, and soil quality.", x = unit(0.77, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+grid.text("Class 2 data contains: ", x = unit(0.77, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("share of households owing cellular", x = unit(0.77, "npc"), y = unit(0.20, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("phone and share of dwellings", x = unit(0.77, "npc"), y = unit(0.17, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("with metal versus thatch roof.", x = unit(0.77, "npc"), y = unit(0.14, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
 
+grid.text("Class 3 data contains:", x = unit(0.77, "npc"), y = unit(0.11, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("household demographics and assets.", x = unit(0.77, "npc"), y = unit(0.08, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
 
 ```
     
@@ -803,8 +839,8 @@ confusionMatrix(HDDS$cat_HDDS_predict,HDDS$cat_HDDS)
 
 
 
-RCSI$cat_RCSI<-cut(RCSI$RCSI, c(-Inf,4,17,42,Inf),labels=c("Severe","Moderate","Mild","Food Secure"))
-RCSI$cat_RCSI_predict<-cut(RCSI$RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Severe","Moderate","Mild","Food Secure"))
+RCSI$cat_RCSI<-cut(RCSI$RCSI, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+RCSI$cat_RCSI_predict<-cut(RCSI$RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
 
 print("RCSI confusionMatrix")
 confusionMatrix(RCSI$cat_RCSI_predict,RCSI$cat_RCSI)
