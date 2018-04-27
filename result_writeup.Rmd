@@ -93,9 +93,9 @@ long_data$months<-as.factor(long_data$month)
 
 FCS_long<-as.data.frame(long_data[long_data$measure=="logFCS",])
 
-p<-ggplot(as.data.frame(long_data[long_data$measure!="logFCS",]),aes(x=months,color=measure,y=Food_security,shape = measure,group=measure)) + theme_classic() + geom_path(size=2.5)+ geom_point(size=5)  
+p<-ggplot(as.data.frame(long_data[long_data$measure!="logFCS",]),aes(x=months,color=measure,y=Food_security,shape = measure,group=measure)) + theme_classic() + geom_path(size=2.5,show.legend = FALSE)+ geom_point(size=5,show.legend = FALSE)  
 # adding the relative humidity data, transformed to match roughly the range of the temperature
-p <- p +geom_line(size=2.5,data=FCS_long,aes(y = Food_security*1.1, colour = measure))  + geom_point(data=FCS_long,aes(y = Food_security*1.1, colour = measure),size=5)  
+p <- p +geom_line(size=2.5,data=FCS_long,aes(y = Food_security*1.1, colour = measure,))  + geom_point(data=FCS_long,aes(y = Food_security*1.1,colour = measure),show.legend = FALSE,size=5)  
 p = p +   theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=17), legend.text=element_text(size=16),axis.text.x=element_text(size=17),axis.text.y=element_text(size=17),
                  axis.title=element_text(size=17,face="bold") ) 
  
@@ -642,10 +642,11 @@ rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),lege
 
  rplot = rplot + scale_color_grey(start = 0.8, end = 0.2) +  theme(plot.margin = unit(c(1, 2, 1, 1), "lines"))  
  rplot
- grid.text("Class 1 data contains past IPC values, precipitation", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
- grid.text("market price, market access and soil quality", x = unit(0.625, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
-grid.text("Class 2 data contains roof type and cellphone ownership", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("Class 3 data contains household demographics and assets", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+ grid.text("Class 1 data contains: past IPC values, precipitation", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+ grid.text("market prices, market access measures, and soil quality", x = unit(0.625, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
+grid.text("Class 2 data contains: share of households owing cellular phone ", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("and share of dwellings with metal versus thatch roof", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("Class 3 data contains household demographics and assets", x = unit(0.625, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
 
 
 ```
