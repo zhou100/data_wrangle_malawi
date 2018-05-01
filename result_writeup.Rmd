@@ -1,6 +1,8 @@
 ---
 title: "Result_writeup"
-output: word_document
+output:
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -462,204 +464,204 @@ grid.text("predicted as medium diversity", x = unit(0.71, "npc"), y = unit(0.19,
 
 b.	Scatter plots (predict vs. actual) plus ipc only value 
 ```{r,include=FALSE}
-logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC.csv")
-HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC.csv")
-RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC.csv")
-
-rcsi_pair <- cbind(as.matrix(rcsi_pair), RCSI_IPC$clust_RCSI_predict_ipc)
-colnames(rcsi_pair)[3] = "ipc_pred"
-
-cutoff1 <- data.frame( x = c(-Inf, Inf), y = 17, cutoff = factor(17) )
-cutoff2 <- data.frame( x = c(-Inf, Inf), y = 4, cutoff = factor(4) )
-cutoff3 <- data.frame( y = c(-Inf, Inf), x = 17, cutoff = factor(17) )
-cutoff4 <- data.frame( y = c(-Inf, Inf), x = 4, cutoff = factor(4) )
-
-# 28 42 3 6 
-
-ggplot(as.data.frame(rcsi_pair), aes(actual, predict )) +
-  theme_classic() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2") +
-  labs(x = "Cluster Average RCSI (Actual)", y = "Cluster Average rCSI (Predicted)")+
-theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) +
-  geom_line(aes( x, y, linetype = cutoff), cutoff1) +
-  geom_line(aes( x, y, linetype = cutoff), cutoff2) +
-  geom_line(aes( x, y, linetype = cutoff), cutoff3) +
-  geom_line(aes( x, y, linetype = cutoff), cutoff4) +
-  theme(plot.margin = unit(c(1, 14, 1, 1), "lines"))  +
-   geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
-          aes(ymin=0,ymax=actual), fill="grey", alpha="0.45")+   # area 2 left 
-    geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
-          aes(ymin=4,ymax=actual), fill="grey", alpha="0.45")+   # area 2 right 
-  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
-          aes(ymin=actual,ymax=17), fill="grey", alpha="0.2")+   # area 3 right
-  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
-          aes(ymin=actual,ymax=4), fill="grey", alpha="0.2") +  # area 3 left
-  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
-          aes(ymin=4,ymax=17), fill="grey", alpha="0.6") +        # area 4 
-  geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
-          aes(ymin=0,ymax=4), fill="grey", alpha="0.8") +           # area 1
-    geom_point(data = as.data.frame(RCSI_IPC),aes(clust_RCSI, clust_RCSI_predict_ipc),shape =2,size =4,show.legend = FALSE,na.rm = TRUE) +
-    geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
-
- annotate(geom = "text", size = 7, x = 10, y = 7, label = "II") +
- annotate(geom = "text", size = 7, x = 2.2, y = 0.5, label = "II") +
-  annotate(geom = "text", size = 7, x = 10, y = 2, label = "I") +
-   annotate(geom = "text", size = 7, x = 0.2, y = 3, label = "III") +
-  annotate(geom = "text", size = 7, x = 7, y = 10, label = "III") +
-  annotate(geom = "text", size = 7, x = 2, y = 10, label = "IV") +
-   theme(plot.margin = unit(c(1, 14, 1, 1), "lines"))  
-
- grid.text(paste("R Squared= ",r2list[1],sep = " "), x = unit(0.72, "npc"), y = unit(0.65, "npc"),gp=gpar(fontsize=15),just="left") 
- grid.text("IPC only predictions in triangles", x = unit(0.72, "npc"), y = unit(0.62, "npc"),gp=gpar(fontsize=15)，just="left") 
- grid.text("Cluster model predictions in dots", x = unit(0.72, "npc"), y = unit(0.59, "npc"),gp=gpar(fontsize=15)，just="left")
-
- grid.text("rCSI from 0 to 4 is food secure ", x = unit(0.72, "npc"), y = unit(0.44, "npc"),gp=gpar(fontsize=15),just="left") 
- grid.text("rCSI from 4 to 17 is mildly insecure", x = unit(0.72, "npc"), y = unit(0.41, "npc"),gp=gpar(fontsize=15),just="left") 
- grid.text("rCSI of 17 or above is moderately ", x = unit(0.72, "npc"), y = unit(0.38, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("or severely insecure ", x = unit(0.72, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15),just="left") 
-
-
- grid.text("Area I:Overpredicting, actually mildly", x = unit(0.72, "npc"), y = unit(0.31, "npc"),gp=gpar(fontsize=15),just="left") 
-  grid.text("insecure and predicted as secure", x = unit(0.72, "npc"), y = unit(0.28,"npc"),gp=gpar(fontsize=15),just="left") 
- grid.text("Area II:Overpredicting,", x = unit(0.72, "npc"), y = unit(0.25, "npc"),gp=gpar(fontsize=15),just="left") 
-  grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.22, "npc"),gp=gpar(fontsize=15),just="left") 
-
- 
-grid.text("Area III:Underpredicting,", x = unit(0.72, "npc"), y = unit(0.19, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.16, "npc"),gp=gpar(fontsize=15),just="left") 
-
-grid.text("Area IV:Underpredicting,actually secure", x = unit(0.72, "npc"), y = unit(0.13, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("and predicted as mildly insecure", x = unit(0.72, "npc"), y = unit(0.10, "npc"),gp=gpar(fontsize=15),just="left") 
-
-
-
-
-
-
-
-cutoffa <- data.frame( x = c(-Inf, Inf), y =3.332, cutoff = factor(3.332) )
-cutoffb <- data.frame( x = c(-Inf, Inf), y = 3.738, cutoff = factor(3.738) )
-cutoffc <- data.frame( y = c(-Inf, Inf), x =3.332, cutoff = factor(3.332) )
-cutoffd <- data.frame( y = c(-Inf, Inf), x = 3.738, cutoff = factor(3.738) )
-
-ggplot(as.data.frame(logFCS_pair), aes(actual, predict)) +
-  theme_classic() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2") +
-  labs(x = "Cluster Average logFCS (Actual)", y = "Cluster Average logFCS (Predicted)") + 
-  geom_line(aes( x, y, linetype = cutoff), cutoffa) +
-  geom_line(aes( x, y, linetype = cutoff), cutoffb) +
-  geom_line(aes( x, y, linetype = cutoff), cutoffc) +
-  geom_line(aes( x, y, linetype = cutoff), cutoffd) +
-  theme(plot.margin = unit(c(1, 14, 1, 1), "lines"))  +
-theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) +
-  geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.332 <= actual & actual <= 3.738), 
-              aes(ymin=3.332,ymax=actual), fill="grey", alpha="0.2") +   # area 3 left 
-  geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.738 <= actual & actual <= 4.6), 
-              aes(ymin=3.738,ymax=actual), fill="grey", alpha="0.2") +   # area 3 right 
-  geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.332 <= actual & actual <= 3.738), 
-              aes(ymin=actual,ymax=3.738), fill="grey", alpha="0.45") +   # area 2 left
-  geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.738 <= actual & actual <= 4.6), 
-              aes(ymin=actual,ymax=4.7), fill="grey", alpha="0.45") +            # area 2 right
-  geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.332<= actual & actual <= 3.738), 
-              aes(ymin=3.738,ymax=4.7), fill="grey", alpha="0.8") +        # area 1
-  geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.738 <= actual & actual <= 4.6), 
-              aes(ymin=3.332,ymax=3.738), fill="grey", alpha="0.6") +           # area 4
-    geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
-  geom_point(data = as.data.frame(logFCS_IPC),aes(clust_logFCS, clust_logFCS_predict_ipc),shape =2,size =4,show.legend = FALSE,na.rm = TRUE) +
-
-  annotate(geom = "text", size = 7, x = 3.6, y = 3.5, label = "III") +
-  annotate(geom = "text", size = 7, x = 4.2, y = 3.9, label = "III") +
-  annotate(geom = "text", size = 7, x = 3.55, y = 4.15, label = "I") +
-  annotate(geom = "text", size = 7, x = 3.55, y = 3.65, label = "II") +
-  annotate(geom = "text", size = 7, x = 3.9, y = 4.2, label = "II") +
-  annotate(geom = "text", size = 7, x = 4, y = 3.5, label = "IV") +
-  theme(plot.margin = unit(c(1, 15, 1, 1), "lines")) 
-
-grid.text(paste("R Squared= ",r2list[2],sep = " "), x = unit(0.72, "npc"), y = unit(0.65, "npc"),gp=gpar(fontsize=15),just="left") 
-  grid.text("IPC only predictions in triangles", x = unit(0.72, "npc"), y = unit(0.62, "npc"),gp=gpar(fontsize=15)，just="left") 
-  grid.text("Cluster model predictions in dots", x = unit(0.72, "npc"), y = unit(0.59, "npc"),gp=gpar(fontsize=15)，just="left")
-
-grid.text("logFCS of 3.738 or above is acceptable", x = unit(0.72, "npc"), y = unit(0.47, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("logFCS from 3.332 to 3.738 is borderline", x = unit(0.72, "npc"), y = unit(0.44, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("logFCS of value 3.332 or below is poor", x = unit(0.72, "npc"), y = unit(0.41, "npc"),gp=gpar(fontsize=15),just="left") 
-
-grid.text("Area I:Overpredicting, actually borderline", x = unit(0.72, "npc"), y = unit(0.38, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("status and predicted as acceptable", x = unit(0.72, "npc"), y = unit(0.35,"npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("Area II:Overpredicting,", x = unit(0.72, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15),just="left") 
-
-grid.text("Area III:Underpredicting,", x = unit(0.72, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),just="left") 
-
-grid.text("Area IV:Underpredicting,actually ", x = unit(0.72, "npc"), y = unit(0.2, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("acceptable and predicted as borderline", x = unit(0.72, "npc"), y = unit(0.17, "npc"),gp=gpar(fontsize=15),just="left") 
-
-  
-
-
-cutoffw <- data.frame( x = c(-Inf, Inf), y = 3, cutoff = factor(3) )
-cutoffx <- data.frame( x = c(-Inf, Inf), y = 6, cutoff = factor(6) )
-cutoffy <- data.frame( y = c(-Inf, Inf), x = 3, cutoff = factor(3) )
-cutoffz <- data.frame( y = c(-Inf, Inf), x = 6, cutoff = factor(6) )
-
-ggplot(as.data.frame(HDDS_pair), aes(actual, predict)) +
-  theme_classic() + geom_abline(intercept = 0, slope = 1)+
-  scale_color_brewer(palette="Dark2")+
-theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) +
-  labs(x = "Cluster Average HDDS (Actual)", y = "Cluster Average HDDS (Predicted)") +
-  geom_line(aes( x, y, linetype = cutoff), cutoffw) +
-  geom_line(aes( x, y, linetype = cutoff), cutoffx) +
-  geom_line(aes( x, y, linetype = cutoff), cutoffy) +
-  geom_line(aes( x, y, linetype = cutoff), cutoffz) +
-  theme(plot.margin = unit(c(1, 14, 1, 1), "lines")) +
-  geom_ribbon(data=subset(as.data.frame(HDDS_pair), 3 <= actual & actual <= 6), 
-              aes(ymin=3,ymax=actual), fill="grey", alpha="0.2") +   # area 3 left 
-  geom_ribbon(data=subset(as.data.frame(HDDS_pair), 6 <= actual & actual <= 7), 
-              aes(ymin=6,ymax=actual), fill="grey", alpha="0.2") +   # area 3 right 
-  geom_ribbon(data=subset(as.data.frame(HDDS_pair), 3 <= actual & actual <= 6), 
-              aes(ymin=actual,ymax=6), fill="grey", alpha="0.45") +   # area 2 left
-  geom_ribbon(data=subset(as.data.frame(HDDS_pair), 6 <= actual & actual <= 7), 
-              aes(ymin=actual,ymax=8), fill="grey", alpha="0.45") +            # area 2 right
-  geom_ribbon(data=subset(as.data.frame(HDDS_pair), 3<= actual & actual <= 6), 
-              aes(ymin=6,ymax=8), fill="grey", alpha="0.8") +        # area 1
-  geom_ribbon(data=subset(as.data.frame(HDDS_pair), 6 <= actual & actual <= 7), 
-              aes(ymin=3,ymax=6), fill="grey", alpha="0.6") +           # area 4
-    geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
-
-    geom_point(data = as.data.frame(HDDS_IPC),aes(clust_HDDS, clust_HDDS_predict_ipc),shape =2,size =4,show.legend = FALSE,na.rm = TRUE) +
-
-  annotate(geom = "text", size = 7, x = 4.7, y = 3.8, label = "III") +
-  annotate(geom = "text", size = 7, x = 6.5, y = 6.2, label = "III") +
-  annotate(geom = "text", size = 7, x = 4.7, y = 6.5, label = "I") +
-  annotate(geom = "text", size = 7, x = 4.7, y = 5.6, label = "II") +
-  annotate(geom = "text", size = 7, x = 6.5, y = 6.7, label = "II") +
-  annotate(geom = "text", size = 7, x = 6.5, y = 3.8, label = "IV") +
-  
-  theme(plot.margin = unit(c(1, 15, 1, 1), "lines")) 
-grid.text(paste("R Squared= ",r2list[3],sep = " "), x = unit(0.72, "npc"), y = unit(0.65, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("IPC only predictions in triangles", x = unit(0.72, "npc"), y = unit(0.62, "npc"),gp=gpar(fontsize=15)，just="left") 
-grid.text("Cluster model predictions in dots", x = unit(0.72, "npc"), y = unit(0.59, "npc"),gp=gpar(fontsize=15)，just="left")
-
-
-grid.text("HDDS of 6 or above is good diversity", x = unit(0.72, "npc"), y = unit(0.47, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("HDDS from 3 to 6 is medium diversity", x = unit(0.72, "npc"), y = unit(0.44, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("HDDS of value 3 or below is low diversity", x = unit(0.72, "npc"), y = unit(0.41, "npc"),gp=gpar(fontsize=15),just="left") 
-
-grid.text("Area I:Overpredicting, actually medium", x = unit(0.72, "npc"), y = unit(0.38, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("diversity and predicted as good diversity", x = unit(0.72, "npc"), y = unit(0.35,"npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("Area II:Overpredicting,", x = unit(0.72, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15),just="left") 
-
-
-grid.text("Area III:Underpredicting,", x = unit(0.72, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),just="left") 
-
-grid.text("Area IV:Underpredicting,actual medium", x = unit(0.72, "npc"), y = unit(0.2, "npc"),gp=gpar(fontsize=15),just="left") 
-grid.text("diversity and predicted as good diversity", x = unit(0.72, "npc"), y = unit(0.17, "npc"),gp=gpar(fontsize=15),just="left") 
-
+# logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC.csv")
+# HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC.csv")
+# RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC.csv")
+# 
+# rcsi_pair <- cbind(as.matrix(rcsi_pair), RCSI_IPC$clust_RCSI_predict_ipc)
+# colnames(rcsi_pair)[3] = "ipc_pred"
+# 
+# cutoff1 <- data.frame( x = c(-Inf, Inf), y = 17, cutoff = factor(17) )
+# cutoff2 <- data.frame( x = c(-Inf, Inf), y = 4, cutoff = factor(4) )
+# cutoff3 <- data.frame( y = c(-Inf, Inf), x = 17, cutoff = factor(17) )
+# cutoff4 <- data.frame( y = c(-Inf, Inf), x = 4, cutoff = factor(4) )
+# 
+# # 28 42 3 6 
+# 
+# ggplot(as.data.frame(rcsi_pair), aes(actual, predict )) +
+#   theme_classic() + geom_abline(intercept = 0, slope = 1)+
+#   scale_color_brewer(palette="Dark2") +
+#   labs(x = "Cluster Average RCSI (Actual)", y = "Cluster Average rCSI (Predicted)")+
+# theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
+#                  axis.title=element_text(size=17,face="bold") ) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoff1) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoff2) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoff3) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoff4) +
+#   theme(plot.margin = unit(c(1, 14, 1, 1), "lines"))  +
+#    geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
+#           aes(ymin=0,ymax=actual), fill="grey", alpha="0.45")+   # area 2 left 
+#     geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
+#           aes(ymin=4,ymax=actual), fill="grey", alpha="0.45")+   # area 2 right 
+#   geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
+#           aes(ymin=actual,ymax=17), fill="grey", alpha="0.2")+   # area 3 right
+#   geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
+#           aes(ymin=actual,ymax=4), fill="grey", alpha="0.2") +  # area 3 left
+#   geom_ribbon(data=subset(as.data.frame(rcsi_pair), 0 <= actual & actual <= 4), 
+#           aes(ymin=4,ymax=17), fill="grey", alpha="0.6") +        # area 4 
+#   geom_ribbon(data=subset(as.data.frame(rcsi_pair), 4 <= actual & actual <= 17), 
+#           aes(ymin=0,ymax=4), fill="grey", alpha="0.8") +           # area 1
+#     geom_point(data = as.data.frame(RCSI_IPC),aes(clust_RCSI, clust_RCSI_predict_ipc),shape =2,size =4,show.legend = FALSE,na.rm = TRUE) +
+#     geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+# 
+#  annotate(geom = "text", size = 7, x = 10, y = 7, label = "II") +
+#  annotate(geom = "text", size = 7, x = 2.2, y = 0.5, label = "II") +
+#   annotate(geom = "text", size = 7, x = 10, y = 2, label = "I") +
+#    annotate(geom = "text", size = 7, x = 0.2, y = 3, label = "III") +
+#   annotate(geom = "text", size = 7, x = 7, y = 10, label = "III") +
+#   annotate(geom = "text", size = 7, x = 2, y = 10, label = "IV") +
+#    theme(plot.margin = unit(c(1, 14, 1, 1), "lines"))  
+# 
+#  grid.text(paste("R Squared= ",r2list[1],sep = " "), x = unit(0.72, "npc"), y = unit(0.65, "npc"),gp=gpar(fontsize=15),just="left") 
+#  grid.text("IPC only predictions in triangles", x = unit(0.72, "npc"), y = unit(0.62, "npc"),gp=gpar(fontsize=15)，just="left") 
+#  grid.text("Cluster model predictions in dots", x = unit(0.72, "npc"), y = unit(0.59, "npc"),gp=gpar(fontsize=15)，just="left")
+# 
+#  grid.text("rCSI from 0 to 4 is food secure ", x = unit(0.72, "npc"), y = unit(0.44, "npc"),gp=gpar(fontsize=15),just="left") 
+#  grid.text("rCSI from 4 to 17 is mildly insecure", x = unit(0.72, "npc"), y = unit(0.41, "npc"),gp=gpar(fontsize=15),just="left") 
+#  grid.text("rCSI of 17 or above is moderately ", x = unit(0.72, "npc"), y = unit(0.38, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("or severely insecure ", x = unit(0.72, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# 
+#  grid.text("Area I:Overpredicting, actually mildly", x = unit(0.72, "npc"), y = unit(0.31, "npc"),gp=gpar(fontsize=15),just="left") 
+#   grid.text("insecure and predicted as secure", x = unit(0.72, "npc"), y = unit(0.28,"npc"),gp=gpar(fontsize=15),just="left") 
+#  grid.text("Area II:Overpredicting,", x = unit(0.72, "npc"), y = unit(0.25, "npc"),gp=gpar(fontsize=15),just="left") 
+#   grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.22, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+#  
+# grid.text("Area III:Underpredicting,", x = unit(0.72, "npc"), y = unit(0.19, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.16, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# grid.text("Area IV:Underpredicting,actually secure", x = unit(0.72, "npc"), y = unit(0.13, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("and predicted as mildly insecure", x = unit(0.72, "npc"), y = unit(0.10, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# cutoffa <- data.frame( x = c(-Inf, Inf), y =3.332, cutoff = factor(3.332) )
+# cutoffb <- data.frame( x = c(-Inf, Inf), y = 3.738, cutoff = factor(3.738) )
+# cutoffc <- data.frame( y = c(-Inf, Inf), x =3.332, cutoff = factor(3.332) )
+# cutoffd <- data.frame( y = c(-Inf, Inf), x = 3.738, cutoff = factor(3.738) )
+# 
+# ggplot(as.data.frame(logFCS_pair), aes(actual, predict)) +
+#   theme_classic() + geom_abline(intercept = 0, slope = 1)+
+#   scale_color_brewer(palette="Dark2") +
+#   labs(x = "Cluster Average logFCS (Actual)", y = "Cluster Average logFCS (Predicted)") + 
+#   geom_line(aes( x, y, linetype = cutoff), cutoffa) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoffb) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoffc) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoffd) +
+#   theme(plot.margin = unit(c(1, 14, 1, 1), "lines"))  +
+# theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
+#                  axis.title=element_text(size=17,face="bold") ) +
+#   geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.332 <= actual & actual <= 3.738), 
+#               aes(ymin=3.332,ymax=actual), fill="grey", alpha="0.2") +   # area 3 left 
+#   geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.738 <= actual & actual <= 4.6), 
+#               aes(ymin=3.738,ymax=actual), fill="grey", alpha="0.2") +   # area 3 right 
+#   geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.332 <= actual & actual <= 3.738), 
+#               aes(ymin=actual,ymax=3.738), fill="grey", alpha="0.45") +   # area 2 left
+#   geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.738 <= actual & actual <= 4.6), 
+#               aes(ymin=actual,ymax=4.7), fill="grey", alpha="0.45") +            # area 2 right
+#   geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.332<= actual & actual <= 3.738), 
+#               aes(ymin=3.738,ymax=4.7), fill="grey", alpha="0.8") +        # area 1
+#   geom_ribbon(data=subset(as.data.frame(logFCS_pair), 3.738 <= actual & actual <= 4.6), 
+#               aes(ymin=3.332,ymax=3.738), fill="grey", alpha="0.6") +           # area 4
+#     geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+#   geom_point(data = as.data.frame(logFCS_IPC),aes(clust_logFCS, clust_logFCS_predict_ipc),shape =2,size =4,show.legend = FALSE,na.rm = TRUE) +
+# 
+#   annotate(geom = "text", size = 7, x = 3.6, y = 3.5, label = "III") +
+#   annotate(geom = "text", size = 7, x = 4.2, y = 3.9, label = "III") +
+#   annotate(geom = "text", size = 7, x = 3.55, y = 4.15, label = "I") +
+#   annotate(geom = "text", size = 7, x = 3.55, y = 3.65, label = "II") +
+#   annotate(geom = "text", size = 7, x = 3.9, y = 4.2, label = "II") +
+#   annotate(geom = "text", size = 7, x = 4, y = 3.5, label = "IV") +
+#   theme(plot.margin = unit(c(1, 15, 1, 1), "lines")) 
+# 
+# grid.text(paste("R Squared= ",r2list[2],sep = " "), x = unit(0.72, "npc"), y = unit(0.65, "npc"),gp=gpar(fontsize=15),just="left") 
+#   grid.text("IPC only predictions in triangles", x = unit(0.72, "npc"), y = unit(0.62, "npc"),gp=gpar(fontsize=15)，just="left") 
+#   grid.text("Cluster model predictions in dots", x = unit(0.72, "npc"), y = unit(0.59, "npc"),gp=gpar(fontsize=15)，just="left")
+# 
+# grid.text("logFCS of 3.738 or above is acceptable", x = unit(0.72, "npc"), y = unit(0.47, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("logFCS from 3.332 to 3.738 is borderline", x = unit(0.72, "npc"), y = unit(0.44, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("logFCS of value 3.332 or below is poor", x = unit(0.72, "npc"), y = unit(0.41, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# grid.text("Area I:Overpredicting, actually borderline", x = unit(0.72, "npc"), y = unit(0.38, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("status and predicted as acceptable", x = unit(0.72, "npc"), y = unit(0.35,"npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("Area II:Overpredicting,", x = unit(0.72, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# grid.text("Area III:Underpredicting,", x = unit(0.72, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# grid.text("Area IV:Underpredicting,actually ", x = unit(0.72, "npc"), y = unit(0.2, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("acceptable and predicted as borderline", x = unit(0.72, "npc"), y = unit(0.17, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+#   
+# 
+# 
+# cutoffw <- data.frame( x = c(-Inf, Inf), y = 3, cutoff = factor(3) )
+# cutoffx <- data.frame( x = c(-Inf, Inf), y = 6, cutoff = factor(6) )
+# cutoffy <- data.frame( y = c(-Inf, Inf), x = 3, cutoff = factor(3) )
+# cutoffz <- data.frame( y = c(-Inf, Inf), x = 6, cutoff = factor(6) )
+# 
+# ggplot(as.data.frame(HDDS_pair), aes(actual, predict)) +
+#   theme_classic() + geom_abline(intercept = 0, slope = 1)+
+#   scale_color_brewer(palette="Dark2")+
+# theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
+#                  axis.title=element_text(size=17,face="bold") ) +
+#   labs(x = "Cluster Average HDDS (Actual)", y = "Cluster Average HDDS (Predicted)") +
+#   geom_line(aes( x, y, linetype = cutoff), cutoffw) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoffx) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoffy) +
+#   geom_line(aes( x, y, linetype = cutoff), cutoffz) +
+#   theme(plot.margin = unit(c(1, 14, 1, 1), "lines")) +
+#   geom_ribbon(data=subset(as.data.frame(HDDS_pair), 3 <= actual & actual <= 6), 
+#               aes(ymin=3,ymax=actual), fill="grey", alpha="0.2") +   # area 3 left 
+#   geom_ribbon(data=subset(as.data.frame(HDDS_pair), 6 <= actual & actual <= 7), 
+#               aes(ymin=6,ymax=actual), fill="grey", alpha="0.2") +   # area 3 right 
+#   geom_ribbon(data=subset(as.data.frame(HDDS_pair), 3 <= actual & actual <= 6), 
+#               aes(ymin=actual,ymax=6), fill="grey", alpha="0.45") +   # area 2 left
+#   geom_ribbon(data=subset(as.data.frame(HDDS_pair), 6 <= actual & actual <= 7), 
+#               aes(ymin=actual,ymax=8), fill="grey", alpha="0.45") +            # area 2 right
+#   geom_ribbon(data=subset(as.data.frame(HDDS_pair), 3<= actual & actual <= 6), 
+#               aes(ymin=6,ymax=8), fill="grey", alpha="0.8") +        # area 1
+#   geom_ribbon(data=subset(as.data.frame(HDDS_pair), 6 <= actual & actual <= 7), 
+#               aes(ymin=3,ymax=6), fill="grey", alpha="0.6") +           # area 4
+#     geom_point(shape = 16, size = 3, show.legend = FALSE,na.rm = TRUE) +
+# 
+#     geom_point(data = as.data.frame(HDDS_IPC),aes(clust_HDDS, clust_HDDS_predict_ipc),shape =2,size =4,show.legend = FALSE,na.rm = TRUE) +
+# 
+#   annotate(geom = "text", size = 7, x = 4.7, y = 3.8, label = "III") +
+#   annotate(geom = "text", size = 7, x = 6.5, y = 6.2, label = "III") +
+#   annotate(geom = "text", size = 7, x = 4.7, y = 6.5, label = "I") +
+#   annotate(geom = "text", size = 7, x = 4.7, y = 5.6, label = "II") +
+#   annotate(geom = "text", size = 7, x = 6.5, y = 6.7, label = "II") +
+#   annotate(geom = "text", size = 7, x = 6.5, y = 3.8, label = "IV") +
+#   
+#   theme(plot.margin = unit(c(1, 15, 1, 1), "lines")) 
+# grid.text(paste("R Squared= ",r2list[3],sep = " "), x = unit(0.72, "npc"), y = unit(0.65, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("IPC only predictions in triangles", x = unit(0.72, "npc"), y = unit(0.62, "npc"),gp=gpar(fontsize=15)，just="left") 
+# grid.text("Cluster model predictions in dots", x = unit(0.72, "npc"), y = unit(0.59, "npc"),gp=gpar(fontsize=15)，just="left")
+# 
+# 
+# grid.text("HDDS of 6 or above is good diversity", x = unit(0.72, "npc"), y = unit(0.47, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("HDDS from 3 to 6 is medium diversity", x = unit(0.72, "npc"), y = unit(0.44, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("HDDS of value 3 or below is low diversity", x = unit(0.72, "npc"), y = unit(0.41, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# grid.text("Area I:Overpredicting, actually medium", x = unit(0.72, "npc"), y = unit(0.38, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("diversity and predicted as good diversity", x = unit(0.72, "npc"), y = unit(0.35,"npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("Area II:Overpredicting,", x = unit(0.72, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# 
+# grid.text("Area III:Underpredicting,", x = unit(0.72, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("but within the same category", x = unit(0.72, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
+# grid.text("Area IV:Underpredicting,actual medium", x = unit(0.72, "npc"), y = unit(0.2, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("diversity and predicted as good diversity", x = unit(0.72, "npc"), y = unit(0.17, "npc"),gp=gpar(fontsize=15),just="left") 
+# 
 
 
 
@@ -891,11 +893,11 @@ rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),lege
 
  rplot = rplot + scale_color_grey(start = 0.8, end = 0.2) +  theme(plot.margin = unit(c(1, 2, 1, 1), "lines"))  
  rplot
- grid.text("Class 1 data contains: past IPC values, precipitation,", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
- grid.text("market prices, market access measures, and soil quality", x = unit(0.625, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
-grid.text("Class 2 data contains: share of households owing cellular", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("phone and share of dwellings with metal versus thatch roof", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("Class 3 data contains: household demographics and assets", x = unit(0.625, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+ grid.text("Class 1 data contains: past IPC values, precipitation,", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15), check.overlap = TRUE,just="left") 
+ grid.text("market prices, market access measures, and soil quality", x = unit(0.625, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left") 
+grid.text("Class 2 data contains: share of households owing cellular", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+grid.text("phone and share of dwellings with metal versus thatch roof", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+grid.text("Class 3 data contains: household demographics and assets", x = unit(0.625, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
 
 
 ```
@@ -932,17 +934,17 @@ rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),lege
 
  rplot = rplot + scale_color_grey(start = 0.8, end = 0.2) +  theme(plot.margin = unit(c(1, 9, 1, 1), "lines"))  
  rplot
- grid.text("Class 1 data contains:", x = unit(0.77, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
-  grid.text("past IPC values, precipitation,", x = unit(0.77, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
- grid.text("market prices, market access", x = unit(0.77, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
- grid.text("measures, and soil quality.", x = unit(0.77, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left") 
-grid.text("Class 2 data contains: ", x = unit(0.77, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("share of households owing cellular", x = unit(0.77, "npc"), y = unit(0.20, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("phone and share of dwellings", x = unit(0.77, "npc"), y = unit(0.17, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("with metal versus thatch roof.", x = unit(0.77, "npc"), y = unit(0.14, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+ grid.text("Class 1 data contains:", x = unit(0.77, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left") 
+  grid.text("past IPC values, precipitation,", x = unit(0.77, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15), check.overlap = TRUE,just="left") 
+ grid.text("market prices, market access", x = unit(0.77, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15), check.overlap = TRUE,just="left") 
+ grid.text("measures, and soil quality.", x = unit(0.77, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left") 
+grid.text("Class 2 data contains: ", x = unit(0.77, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+grid.text("share of households owing cellular", x = unit(0.77, "npc"), y = unit(0.20, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+grid.text("phone and share of dwellings", x = unit(0.77, "npc"), y = unit(0.17, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+grid.text("with metal versus thatch roof.", x = unit(0.77, "npc"), y = unit(0.14, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
 
-grid.text("Class 3 data contains:", x = unit(0.77, "npc"), y = unit(0.11, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
-grid.text("household demographics and assets.", x = unit(0.77, "npc"), y = unit(0.08, "npc"),gp=gpar(fontsize=15)， check.overlap = TRUE,just="left")
+grid.text("Class 3 data contains:", x = unit(0.77, "npc"), y = unit(0.11, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+grid.text("household demographics and assets.", x = unit(0.77, "npc"), y = unit(0.08, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
 
 ```
     
@@ -964,7 +966,27 @@ colnames(RCSI)<-c("RCSI","RCSI_predict")
 #"Poor_predict","Borderline_predict","Acceptable_predict"
 # Poor_actual","Borderline_actual","Acceptable_actual"
 
-logFCS
+# calculate the percentage of that samples that are underpredicting. 
+diff_fcs =logFCS$logFCS_predict  - logFCS$logFCS 
+diff_fcs_dum = ifelse(diff_fcs>0,1,0)
+mean(diff_fcs_dum)
+1- mean(diff_fcs_dum)
+
+
+
+diff_HDDS =HDDS$HDDS_predict  - HDDS$HDDS
+diff_HDDS_dum = ifelse(diff_HDDS>0,1,0)
+mean(diff_HDDS_dum)
+1- mean(diff_HDDS_dum)
+
+
+
+diff_rcsi =RCSI$RCSI_predict  - RCSI$RCSI
+diff_rcsi_dum = ifelse(diff_rcsi>0,1,0)
+mean(diff_rcsi_dum)
+1- mean(diff_rcsi_dum)
+
+
 
 
 logFCS$cat_logFCS<-cut(logFCS$logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
