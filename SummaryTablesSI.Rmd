@@ -1,0 +1,66 @@
+---
+title: "SummaryTables"
+author: "Yujun Zhou"
+date: "May 8, 2018"
+output: word_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=15, fig.height=10) 
+
+```
+
+
+
+```{r,include=FALSE}
+
+library("dplyr")
+library("ggplot2")
+require(grid)
+library(qwraps2)
+library(psych)
+
+# define the markup language we are working in.
+# options(qwraps2_markup = "latex") is also supported.
+options(qwraps2_markup = "markdown")
+``` 
+
+```{r,include=FALSE}
+clust_2010 <- read.csv("data/clust_2010.csv")
+clust_2013 = read.csv("data/clust_2013.csv")
+
+coord13 <- clust_2013 %>% 
+  select(clust,fnid)
+
+
+coord10 <- clust_2010 %>% 
+  select(clust,fnid)
+
+coord <- bind_rows(coord10,coord13)
+colnames(coord) <- c("ea_id","fnid")
+
+```
+
+
+```{r,include=TRUE}
+
+train_2010 <- read.csv("data/train.csv")
+test_2013 = read.csv("data/test.csv")
+
+d.summary.extended = train_2010 %>% select(-X) %>%   psych::describe() %>% tibble::rownames_to_column() %>% tibble::as_tibble() 
+
+
+d.summary <- d.summary.extended %>%
+    select(var=rowname, mean, median, sd,min, max)  %>% as.data.frame()
+print(d.summary)
+
+
+d.summary.extended2 = test_2013 %>% select(-X) %>%   psych::describe() %>% tibble::rownames_to_column() %>% tibble::as_tibble() 
+
+
+d.summary2 <- d.summary.extended2 %>%
+    select(var=rowname, mean, median, sd,min, max) %>% as.data.frame()
+print(d.summary2)
+```
