@@ -1,0 +1,82 @@
+FS Measure,Level,Model Measure,Value,Model
+logFCS,Cluster,Accuracy,0.26,m1
+logFCS,Cluster,Accuracy,0.31,m2
+logFCS,Cluster,Accuracy,0.34,m3
+logFCS,IPC Zone,Accuracy,0.26,m1
+logFCS,IPC Zone,Accuracy,0.26,m2
+logFCS,IPC Zone,Accuracy,0.19,m3
+logFCS,TA,Accuracy,0.26,m1
+logFCS,TA,Accuracy,0.31,m2
+logFCS,TA,Accuracy,0.36,m3
+HDDS,Cluster,Accuracy,0.78,m1
+HDDS,Cluster,Accuracy,0.78,m2
+HDDS,Cluster,Accuracy,0.78,m3
+HDDS,IPC Zone,Accuracy,0.78,m1
+HDDS,IPC Zone,Accuracy,0.78,m2
+HDDS,IPC Zone,Accuracy,0.76,m3
+HDDS,TA,Accuracy,0.78,m1
+HDDS,TA,Accuracy,0.78,m2
+HDDS,TA,Accuracy,0.78,m3
+rCSI,Cluster,Accuracy,0.39,m1
+rCSI,Cluster,Accuracy,0.4,m2
+rCSI,Cluster,Accuracy,0.41,m3
+rCSI,IPC Zone,Accuracy,0.44,m1
+rCSI,IPC Zone,Accuracy,0.44,m2
+rCSI,IPC Zone,Accuracy,0.45,m3
+rCSI,TA,Accuracy,0.42,m1
+rCSI,TA,Accuracy,0.43,m2
+rCSI,TA,Accuracy,0.49,m3
+logFCS,Cluster,% Type I,0.74,m1
+logFCS,Cluster,% Type I,0.69,m2
+logFCS,Cluster,% Type I,0.66,m3
+logFCS,IPC Zone,% Type I,0.74,m1
+logFCS,IPC Zone,% Type I,0.74,m2
+logFCS,IPC Zone,% Type I,0.81,m3
+logFCS,TA,% Type I,0.74,m1
+logFCS,TA,% Type I,0.69,m2
+logFCS,TA,% Type I,0.64,m3
+HDDS,Cluster,% Type I,0.22,m1
+HDDS,Cluster,% Type I,0.22,m2
+HDDS,Cluster,% Type I,0.22,m3
+HDDS,IPC Zone,% Type I,0.22,m1
+HDDS,IPC Zone,% Type I,0.22,m2
+HDDS,IPC Zone,% Type I,0.24,m3
+HDDS,TA,% Type I,0.22,m1
+HDDS,TA,% Type I,0.22,m2
+HDDS,TA,% Type I,0.22,m3
+rCSI,Cluster,% Type I,0.61,m1
+rCSI,Cluster,% Type I,0.6,m2
+rCSI,Cluster,% Type I,0.59,m3
+rCSI,IPC Zone,% Type I,0.56,m1
+rCSI,IPC Zone,% Type I,0.56,m2
+rCSI,IPC Zone,% Type I,0.55,m3
+rCSI,TA,% Type I,0.49,m1
+rCSI,TA,% Type I,0.47,m2
+rCSI,TA,% Type I,0.49,m3
+logFCS,Cluster,% Type II,0,m1
+logFCS,Cluster,% Type II,0,m2
+logFCS,Cluster,% Type II,0,m3
+logFCS,IPC Zone,% Type II,0,m1
+logFCS,IPC Zone,% Type II,0,m2
+logFCS,IPC Zone,% Type II,0,m3
+logFCS,TA,% Type II,0,m1
+logFCS,TA,% Type II,0,m2
+logFCS,TA,% Type II,0,m3
+HDDS,Cluster,% Type II,0,m1
+HDDS,Cluster,% Type II,0,m2
+HDDS,Cluster,% Type II,0,m3
+HDDS,IPC Zone,% Type II,0,m1
+HDDS,IPC Zone,% Type II,0,m2
+HDDS,IPC Zone,% Type II,0,m3
+HDDS,TA,% Type II,0,m1
+HDDS,TA,% Type II,0,m2
+HDDS,TA,% Type II,0,m3
+rCSI,Cluster,% Type II,0,m1
+rCSI,Cluster,% Type II,0,m2
+rCSI,Cluster,% Type II,0,m3
+rCSI,IPC Zone,% Type II,0.01,m1
+rCSI,IPC Zone,% Type II,0.01,m2
+rCSI,IPC Zone,% Type II,0,m3
+rCSI,TA,% Type II,0.08,m1
+rCSI,TA,% Type II,0.1,m2
+rCSI,TA,% Type II,0.01,m3
