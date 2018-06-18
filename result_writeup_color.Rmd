@@ -96,9 +96,15 @@ colnames(long_data)<-c("month","measure","Food_security")
 long_data$months<-as.factor(long_data$month)
 
 
+
+
+ord_measure <- c("rCSI","logFCS","HDDS")
+long_data$measure <- factor(long_data$measure,levels=ord_measure)
+
+
 FCS_long<-as.data.frame(long_data[long_data$measure=="logFCS",])
 
-p<-ggplot(as.data.frame(long_data[long_data$measure!="logFCS",]),aes(x=months,color=measure,y=Food_security,shape = measure,group=measure)) + theme_classic() + geom_path(size=2.5,show.legend = FALSE)+ geom_point(size=5,show.legend = FALSE)  
+p<-ggplot(as.data.frame(long_data[long_data$measure!="logFCS",]),aes(x=months,color=measure,y=Food_security,group=measure)) + theme_classic() + geom_path(size=2.5,show.legend = FALSE)+ geom_point(size=5,show.legend = FALSE)  
 # adding the relative humidity data, transformed to match roughly the range of the temperature
 p <- p +geom_line(size=2.5,data=FCS_long,aes(y = Food_security*1.1, colour = measure,))  + geom_point(data=FCS_long,aes(y = Food_security*1.1,colour = measure),show.legend = FALSE,size=5)  
 p = p +   theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=17), legend.text=element_text(size=16),axis.text.x=element_text(size=17),axis.text.y=element_text(size=17),
@@ -107,9 +113,9 @@ p = p +   theme(plot.title = element_text(size = 12, face = "bold"),legend.title
 # now adding the secondary axis, following the example in the help file ?scale_y_continuous
 # and, very important, reverting the above transformation
 p <- p + scale_y_continuous(sec.axis = sec_axis(~./1.1, name = "Food consumption scores (in log forms) "))
-p = p + scale_color_grey()
+# p = p + scale_color_grey()
 # modifying colours and theme options
-#  p <- p + scale_colour_manual(values = c("blue", "red"))
+p <- p + scale_colour_manual(values = c("#619CFF", "#00BA38","#F8766D"))
 p <- p + labs(y = "HDDS and rCSI scores",
               x = "Month",
               colour = "Food Security Measures",
@@ -918,8 +924,11 @@ r2$RSquared <-as.numeric(r2$RSquared)
 ``` 
     
 ```{r,echo=FALSE}
+
+#r20 = r2 %>% filter(Model == "Class 0 (IPC value only)" |Model == "Class 1 data" |Model == "Class 1 + Class 2 data"  )
+
 rplot<-ggplot(data = r2, aes(x =Level, y = RSquared,colour = Measures ,shape = Model)) 
-rplot<-rplot + geom_point(size=7)
+rplot<-rplot + geom_point(size=7) + scale_y_continuous(limits = c(0, 0.63))
 rplot<-rplot + labs( x = "Geo-spatial Level", y = "R Squared")
 
 rplot <- rplot+ theme_classic() 
