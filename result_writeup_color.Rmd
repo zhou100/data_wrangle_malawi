@@ -87,6 +87,7 @@ data<-as.data.frame(data)
 data$rCSI[data$rCSI>42]<-42
 data<-data[data$HDDS!=0,]
 
+data %>% group_by(FS_month) %>% dplyr::summarise(avg=mean(rCSI,na.rm = TRUE))
 
 short_data<-aggregate(cbind(rCSI,logFCS,HDDS)~FS_month,data=data, mean)
 library(reshape2)
@@ -115,7 +116,7 @@ p = p +   theme(plot.title = element_text(size = 12, face = "bold"),legend.title
 p <- p + scale_y_continuous(sec.axis = sec_axis(~./1.1, name = "Food consumption scores (in log forms) "))
 # p = p + scale_color_grey()
 # modifying colours and theme options
-p <- p + scale_colour_manual(values = c("#619CFF", "#00BA38","#F8766D"))
+p <- p + scale_colour_manual(values = c("#619CFF", "#00BA38","#F8766D"))+ theme(legend.position = "bottom")
 p <- p + labs(y = "HDDS and rCSI scores",
               x = "Month",
               colour = "Food Security Measures",
@@ -931,7 +932,7 @@ rplot<-ggplot(data = r2, aes(x =Level, y = RSquared,colour = Measures ,shape = M
 rplot<-rplot + geom_point(size=7) + scale_y_continuous(limits = c(0, 0.63))
 rplot<-rplot + labs( x = "Geo-spatial Level", y = "R Squared")
 
-rplot <- rplot+ theme_classic() 
+rplot <- rplot+ theme_classic()  
 rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
                  axis.title=element_text(size=17,face="bold") ) 
 
