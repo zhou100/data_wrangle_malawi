@@ -22,6 +22,7 @@ source("function/R2ComputeDF.R")
 library("dplyr")
 library("ggplot2")
 require(grid)
+library(reshape2)
 
 ``` 
 
@@ -126,64 +127,66 @@ p
 
   b.	bar chart of variation 
 ```{r,include=FALSE}
-# data = malawi_join %>% 
-#   select(rCSI,logFCS,HDDS,FS_month,fnid,TA_names,ea_id)
-# 
-# 
-# data$month_clust <-interaction(data$FS_month,data$ea_id)
-# data$rCSI[data$rCSI>42]<-42
-# data<-data[data$HDDS!=0,]
-# 
-# colnames(data)[4] <-"Month"
-# colnames(data)[5] <-"IPC"
-# colnames(data)[6] <-"TA"
-# colnames(data)[7] <-"Cluster"
-# colnames(data)[8] <-"Month+Cluster"
-# 
-#  
-# #	Maybe a bar chart of variation in FS security measures (month, IPCzone, TA, cluster, month x cluster)
-# 
-# r2 = matrix(NA,3,5)
-# my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Month),data=data))
-# summaries <- lapply(my_lms, summary)
-# r2[,1]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
-# 
-# 
-# my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(IPC),data=data))
-# summaries <- lapply(my_lms, summary)
-# r2[,2]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
-# 
-# 
-# my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(TA),data=data))
-# summaries <- lapply(my_lms, summary)
-# r2[,3]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
-# 
-# 
-# my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Cluster),data=data))
-# summaries <- lapply(my_lms, summary)
-# r2[,4]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
-# 
-# 
-# 
-# my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Month+Cluster),data=data))
-# summaries <- lapply(my_lms, summary)
-# r2[,5]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
-# 
-# 
-# r2 <-as.data.frame(r2)
-# 
-# colnames(r2)<-c("Month","IPC","TA","Cluster","Cluster + Month")
-# rownames(r2)<-c("rCSI","logFCS","HDDS")
-# #r2$measure<-c("RCSI","FCS","HDDS")
-# 
-# 
-# long_r2<- melt(t(r2),na.rm=TRUE,measure.vars =c("rCSI","logFCS","HDDS"))
-# long_r2<-long_r2[long_r2$Var1!="measure",]
-# 
-# colnames(long_r2)<-c("variation","Measures","Rsquared")
-# 
-# ar<-as.character(long_r2$Rsquared)
-# long_r2$ar<-as.numeric(ar)
+data = malawi_join %>% select(rCSI,logFCS,HDDS,FS_month,fnid,TA_names,ea_id)
+
+
+data$month_clust <-interaction(data$FS_month,data$ea_id)
+data$rCSI[data$rCSI>42]<-42 
+data<-data[data$HDDS!=0,]
+
+colnames(data)[4] <-"Month" 
+colnames(data)[5] <-"IPC" 
+colnames(data)[6] <-"TA"
+colnames(data)[7] <-"Cluster" 
+colnames(data)[8] <-"Month+Cluster"
+
+
+#	Maybe a bar chart of variation in FS security measures (month, IPCzone, TA, cluster, month x cluster)
+
+r2 = matrix(NA,3,5) 
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~as.factor(Month),data=data)) 
+summaries <- lapply(my_lms, summary)
+r2[,1]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) 
+lm(data[,x] ~ as.factor(IPC),data=data))
+summaries <- lapply(my_lms, summary) 
+r2[,2]<-sapply(summaries, function(x)
+  c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(TA),data=data))
+summaries <- lapply(my_lms, summary) 
+r2[,3]<-sapply(summaries, function(x)
+c(r_sq = x$r.squared))
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~ as.factor(Cluster),data=data))
+summaries <- lapply(my_lms, summary) 
+r2[,4]<-sapply(summaries, function(x)
+c(r_sq = x$r.squared))
+
+
+
+my_lms <- lapply(1:3, function(x) lm(data[,x] ~as.factor(Month+Cluster),data=data)) 
+summaries <- lapply(my_lms, summary)
+r2[,5]<-sapply(summaries, function(x) c(r_sq = x$r.squared))
+
+
+r2 <-as.data.frame(r2)
+
+colnames(r2)<-c("Month","IPC","TA","Cluster","Cluster + Month")
+rownames(r2)<-c("rCSI","logFCS","HDDS") #r2$measure<-c("RCSI","FCS","HDDS")
+
+
+long_r2<- melt(t(r2),na.rm=TRUE,measure.vars =c("rCSI","logFCS","HDDS"))
+long_r2<-long_r2[long_r2$Var1!="measure",]
+
+colnames(long_r2)<-c("variation","Measures","Rsquared")
+
+ar<-as.character(long_r2$Rsquared)
+long_r2$ar<-as.numeric(ar)
 
 
 # RCSI_r2_fe =  .22320556
@@ -193,18 +196,18 @@ p
 ```
 
 ```{r,echo=FALSE}
-# p<-ggplot(long_r2, aes(variation,ar)) +geom_bar(stat = "identity",position = "dodge",aes(fill = Measures))
-# 
-# p <- p + labs(y = "R Squared",
-#               x = " ",
-#               colour = "Food Security Measures",
-#               shape= " ")
-# 
-# p <- p+ theme_classic() 
-# p <- p +theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=17), legend.text=element_text(size=16),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-#                  axis.title=element_text(size=17,face="bold") ) 
-# p = p + scale_fill_grey(start = 0.2,end = 0.8)
-# p              
+p<-ggplot(long_r2, aes(variation,ar)) +geom_bar(stat = "identity",position = "dodge",aes(fill = Measures))
+
+p <- p + labs(y = "R Squared",
+              x = " ",
+              colour = "Food Security Measures",
+              shape= " ")
+
+p <- p+ theme_classic()
+p <- p +theme(plot.title = element_text(size = 30, face = "bold"),legend.title=element_text(size=30), legend.text=element_text(size=30),axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
+                 axis.title=element_text(size=30,face="bold") )
+p = p + scale_fill_grey(start = 0.2,end = 0.8)
+p
 ```
 
 
@@ -464,7 +467,7 @@ grid.text("is good diversity.", x = unit(0.85, "npc"), y = unit(0.43, "npc"),gp=
 # grid.text("Area IIIa: Underpredicting within medium", x = unit(0.85, "npc"), y = unit(0.31, "npc"),gp=gpar(fontsize=15),just="left") 
 # grid.text("diversity", x = unit(0.85, "npc"), y = unit(0.28, "npc"),gp=gpar(fontsize=15),just="left") 
 # 
-# grid.text("Area IIIb: Underpredicting within good diversity", x = unit(0.85, "npc"), y = unit(0.25, "npc"),gp=gpar(fontsize=15),just="left") 
+# grid.text("Area IIIb: Underpredicting within good diversity", x = unit(0.85, "npc"), y = unit(0.30, "npc"),gp=gpar(fontsize=15),just="left") 
 # 
 # grid.text("Area IV: Underpredicting; good diversity", x = unit(0.85, "npc"), y = unit(0.22, "npc"),gp=gpar(fontsize=15),just="left") 
 # grid.text("predicted as medium diversity", x = unit(0.85, "npc"), y = unit(0.19, "npc"),gp=gpar(fontsize=15),just="left") 
@@ -540,7 +543,7 @@ b.	Scatter plots (predict vs. actual) plus ipc only value
 # 
 #  grid.text("Area I:Overpredicting, actually mildly", x = unit(0.85, "npc"), y = unit(0.31, "npc"),gp=gpar(fontsize=15),just="left") 
 #   grid.text("insecure and predicted as secure", x = unit(0.85, "npc"), y = unit(0.28,"npc"),gp=gpar(fontsize=15),just="left") 
-#  grid.text("Area II:Overpredicting,", x = unit(0.85, "npc"), y = unit(0.25, "npc"),gp=gpar(fontsize=15),just="left") 
+#  grid.text("Area II:Overpredicting,", x = unit(0.85, "npc"), y = unit(0.30, "npc"),gp=gpar(fontsize=15),just="left") 
 #   grid.text("but within the same category", x = unit(0.85, "npc"), y = unit(0.22, "npc"),gp=gpar(fontsize=15),just="left") 
 # 
 #  
@@ -763,9 +766,9 @@ plot_long_RCSI= dplyr::bind_rows(plot_long, long_RCSI_hh)
 ```{r,echo= FALSE}
 
 #plot_long_FCS = plot_long_FCS %>% filter(level!="Actual" & level=="IPC_value_only")
-plot_long_HDDS = plot_long_HDDS %>% filter(level!="Household Actual" & level!="IPC_zone" & level!="TA" & level!="cluster")
-plot_long_FCS = plot_long_FCS %>% filter(level!="Household Actual" & level!="IPC_zone" & level!="TA" & level!="cluster")
-plot_long_RCSI = plot_long_RCSI %>% filter(level!="Household Actual" & level!="IPC_zone" & level!="TA" & level!="cluster")
+# plot_long_HDDS = plot_long_HDDS %>% filter(level!="Household Actual" & level!="IPC_zone" & level!="TA" & level!="cluster")
+# plot_long_FCS = plot_long_FCS %>% filter(level!="Household Actual" & level!="IPC_zone" & level!="TA" & level!="cluster")
+# plot_long_RCSI = plot_long_RCSI %>% filter(level!="Household Actual" & level!="IPC_zone" & level!="TA" & level!="cluster")
 
 #plot_long_RCSI = plot_long_RCSI %>% filter(level!="Household Actual")
 
@@ -774,32 +777,31 @@ p = ggplot(as.data.frame(plot_long_FCS),aes(x=logFCS,color=level)) + geom_densit
 geom_vline(xintercept=log(28),linetype=2) + geom_vline(xintercept=log(42),linetype=2)+
   stat_density(data=plot_long_ipc_fcs,aes(x=logFCS, y=..scaled..*3.5,color=level)) + scale_y_continuous(sec.axis = sec_axis(~.*28, name = " density (IPC value only) ")) +  
  theme_classic()+
-  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) 
+  theme(plot.title = element_text(size = 30, face = "bold"),legend.title=element_text(size=30), legend.text=element_text(size=30),axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
+                 axis.title=element_text(size=30,face="bold") ) 
 
  p
  ggsave("output/figures/Density_new/fcs_ipc.png", width = 15, height = 15)
 
  
  
-p= ggplot(as.data.frame(plot_long_HDDS),aes(x=HDDS, color=level))+ geom_density(alpha=0.25,show.legend = TRUE) +
+p= ggplot(as.data.frame(plot_long_HDDS),aes(x=HDDS, color=level))+ geom_density(alpha=0.30,show.legend = TRUE) +
   xlim(1.5, 7.6) + geom_vline(xintercept=3,linetype=2) + geom_vline(xintercept=6,linetype=2) +
   stat_density(data=plot_long_ipc_HDDS,aes(x=HDDS,y=..scaled..*1.1,color=level)) +
   scale_y_continuous(name= "density",sec.axis = sec_axis(~.*12, name = "density (IPC value only) "))  +  theme_classic()+
-    theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) 
+    theme(plot.title = element_text(size =30, face = "bold"),legend.title=element_text(size=30), legend.text=element_text(size=30),axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
+                 axis.title=element_text(size=30,face="bold") ) 
 
 p
 ggsave("output/figures/Density_new/hdds_ipc.png", width = 15, height = 15)
  
 
 
-p = ggplot(as.data.frame(plot_long_RCSI),aes(x=RCSI, color=level))+ stat_density(data=plot_long_ipc_RCSI,aes(x=RCSI,y=..scaled../2.3,color=level)) + geom_density(alpha=0.25)+xlim(0, 45) + 
+p = ggplot(as.data.frame(plot_long_RCSI),aes(x=RCSI, color=level))+ stat_density(data=plot_long_ipc_RCSI,aes(x=RCSI,y=..scaled../2.3,color=level)) + geom_density(alpha=0.30)+xlim(0, 45) + theme_classic()+
   geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)+
-   scale_y_continuous(name= "density",sec.axis = sec_axis(~.*3.125, name = "density (IPC value only) ")) +
-    theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=25), legend.text=element_text(size=25),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) +
-  theme_classic()
+   scale_y_continuous(name= "density",sec.axis = sec_axis(~.*3.130, name = "density (IPC value only) ")) +
+    theme(plot.title = element_text(size = 30, face = "bold"),legend.title=element_text(size=30), legend.text=element_text(size=30),axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
+                 axis.title=element_text(size=30,face="bold") ) 
 p
 
 ggsave("output/figures/Density_new/rcsi_ipc.png", width = 15, height = 15)
@@ -940,11 +942,11 @@ rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),lege
  
  # +  theme(plot.margin = unit(c(1, 2, 1, 1), "lines"))  
  rplot
-#  grid.text("Class 1 data contains: past IPC values, precipitation,", x = unit(0.625, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15), check.overlap = TRUE,just="left") 
-#  grid.text("market prices, market access measures, and soil quality", x = unit(0.625, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left") 
-# grid.text("Class 2 data contains: share of households owing cellular", x = unit(0.625, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
-# grid.text("phone and share of dwellings with metal versus thatch roof", x = unit(0.625, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
-# grid.text("Class 3 data contains: household demographics and assets", x = unit(0.625, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+#  grid.text("Class 1 data contains: past IPC values, precipitation,", x = unit(0.630, "npc"), y = unit(0.35, "npc"),gp=gpar(fontsize=15), check.overlap = TRUE,just="left") 
+#  grid.text("market prices, market access measures, and soil quality", x = unit(0.630, "npc"), y = unit(0.32, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left") 
+# grid.text("Class 2 data contains: share of households owing cellular", x = unit(0.630, "npc"), y = unit(0.29, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+# grid.text("phone and share of dwellings with metal versus thatch roof", x = unit(0.630, "npc"), y = unit(0.26, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
+# grid.text("Class 3 data contains: household demographics and assets", x = unit(0.630, "npc"), y = unit(0.23, "npc"),gp=gpar(fontsize=15),check.overlap = TRUE,just="left")
 
 
 ```
