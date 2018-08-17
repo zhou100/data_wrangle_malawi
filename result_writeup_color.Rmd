@@ -773,38 +773,49 @@ plot_long_RCSI= dplyr::bind_rows(plot_long, long_RCSI_hh)
 #plot_long_RCSI = plot_long_RCSI %>% filter(level!="Household Actual")
 
 
-p = ggplot(as.data.frame(plot_long_FCS),aes(x=logFCS,color=level)) + geom_density(alpha=0.1) +xlim(2.8, 4.9) +
+p = ggplot(as.data.frame(plot_long_FCS),aes(x=logFCS,color=level)) + geom_density(alpha=0.1,lwd=1.5,show.legend = FALSE) +xlim(2.8, 4.9) +
 geom_vline(xintercept=log(28),linetype=2) + geom_vline(xintercept=log(42),linetype=2)+
-  stat_density(data=plot_long_ipc_fcs,aes(x=logFCS, y=..scaled..*3.5,color=level)) + scale_y_continuous(sec.axis = sec_axis(~.*28, name = " density (IPC value only) ")) +  
+  stat_density(data=plot_long_ipc_fcs,aes(x=logFCS, y=..scaled..*3.5,color=level)) + scale_y_continuous(name= "Density",sec.axis = sec_axis(~.*28, name = " Density (IPC value only) ")) +  
  theme_classic()+
-  theme(plot.title = element_text(size = 30, face = "bold"),legend.title=element_text(size=30), legend.text=element_text(size=30),axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
+  theme(plot.title = element_text(size = 30, face = "bold"),
+        # legend.title=element_text(size=30),
+        # legend.text=element_text(size=30),
+        axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
                  axis.title=element_text(size=30,face="bold") ) 
 
  p
- ggsave("output/figures/Density_new/fcs_ipc.png", width = 15, height = 15)
+ ggsave("output/figures/Density_new_FULL/fcs_ipc.png", width = 15, height = 15)
 
  
  
-p= ggplot(as.data.frame(plot_long_HDDS),aes(x=HDDS, color=level))+ geom_density(alpha=0.30,show.legend = TRUE) +
+p= ggplot(as.data.frame(plot_long_HDDS),aes(x=HDDS, color=level))+ geom_density(alpha=0.20,lwd=1.5,show.legend = FALSE) +
   xlim(1.5, 7.6) + geom_vline(xintercept=3,linetype=2) + geom_vline(xintercept=6,linetype=2) +
   stat_density(data=plot_long_ipc_HDDS,aes(x=HDDS,y=..scaled..*1.1,color=level)) +
-  scale_y_continuous(name= "density",sec.axis = sec_axis(~.*12, name = "density (IPC value only) "))  +  theme_classic()+
-    theme(plot.title = element_text(size =30, face = "bold"),legend.title=element_text(size=30), legend.text=element_text(size=30),axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
+  scale_y_continuous(name= "Density",sec.axis = sec_axis(~.*12, name = "Density (IPC value only) "))  +  theme_classic()+
+    theme(plot.title = element_text(size =30, face = "bold"),
+          #legend.title=element_text(size=30), legend.text=element_text(size=30),
+          axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
                  axis.title=element_text(size=30,face="bold") ) 
 
 p
-ggsave("output/figures/Density_new/hdds_ipc.png", width = 15, height = 15)
+ggsave("output/figures/Density_new_FULL/hdds_ipc.png", width = 15, height = 15)
  
+colnames(plot_long_RCSI)[3]="rCSI"
+colnames(plot_long_ipc_RCSI)[3]="rCSI"
 
 
-p = ggplot(as.data.frame(plot_long_RCSI),aes(x=RCSI, color=level))+ stat_density(data=plot_long_ipc_RCSI,aes(x=RCSI,y=..scaled../2.3,color=level)) + geom_density(alpha=0.30)+xlim(0, 45) + theme_classic()+
+
+p = ggplot(as.data.frame(plot_long_RCSI),aes(x=rCSI, color=level))+ stat_density(data=plot_long_ipc_RCSI,aes(x=rCSI,y=..scaled../2.3,color=level)) + geom_density(alpha=0.30,lwd=1.5,show.legend = FALSE)+xlim(0, 45) + theme_classic()+
   geom_vline(xintercept=4,linetype=2) + geom_vline(xintercept=17,linetype=2)+ geom_vline(xintercept=42,linetype=2)+
-   scale_y_continuous(name= "density",sec.axis = sec_axis(~.*3.130, name = "density (IPC value only) ")) +
-    theme(plot.title = element_text(size = 30, face = "bold"),legend.title=element_text(size=30), legend.text=element_text(size=30),axis.text.x=element_text(size=30),axis.text.y=element_text(size=30),
+   scale_y_continuous(name= "Density",sec.axis = sec_axis(~.*3.130, name = "Density (IPC value only) ")) +
+    theme(plot.title = element_text(size = 30, face = "bold"),
+#          legend.title=element_text(size=30), legend.text=element_text(size=30),
+           axis.text.x=element_text(size=30),
+axis.text.y=element_text(size=30),
                  axis.title=element_text(size=30,face="bold") ) 
 p
 
-ggsave("output/figures/Density_new/rcsi_ipc.png", width = 15, height = 15)
+ggsave("output/figures/Density_new_FULL/rcsi_ipc.png", width = 15, height = 15)
 
  
 ```
@@ -1413,7 +1424,7 @@ ord_measure <- c("rCSI","logFCS","HDDS")
 tail$FS.Measure <- factor(tail$FS.Measure,levels=ord_measure)
 
 
-ord_s <- c("% Type II","% Type I","Accuracy")
+ord_s <- c("Accuracy","% Type I","% Type II")
 tail$Model.Measure <- factor(tail$Model.Measure,levels=ord_s)
 full$Model.Measure <- factor(full$Model.Measure,levels=ord_s)
 
@@ -1421,6 +1432,7 @@ full$Model.Measure <- factor(full$Model.Measure,levels=ord_s)
 
 ord_m <- c("Class 1 data","Class 1 + Class 2 data","Class 1 + Class 2 + Class 3 data")
 tail$Model <- factor(tail$Model,levels=ord_m)
+ 
 
 # 
 # colnames(full)[5] = "Type I Error"
@@ -1436,13 +1448,15 @@ tail$Model <- factor(tail$Model,levels=ord_m)
 
 FCS_full = full %>% filter(FS.Measure == "logFCS")
 
-rplot<-ggplot(data = FCS_full, aes(x =Level, y = Value,colour = Model.Measure,shape=Model)) 
-rplot<-rplot + geom_point(size=7)
+rplot<-ggplot(data = FCS_full, aes(x =Level, y = Value,shape=Model)) 
+rplot<-rplot + geom_point(size=7,color='#00BA38',show.legend=FALSE)   +  facet_grid(. ~  Model.Measure)        
+
 rplot<-rplot + labs( x = "Geo-spatial Level", y = "Accuracy/Type I/Type II")
 
-rplot <- rplot+ theme_classic() 
-rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) 
+rplot <- rplot    + theme_classic() theme(strip.text.x = element_text(size = 25))
+
+rplot <- rplot +  theme(plot.title = element_text(size = 25, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=25),axis.text.x=element_text(size=25),axis.text.y=element_text(size=25),
+                 axis.title=element_text(size=35,face="bold") ) 
 
  #rplot = rplot + scale_color_grey(start = 0.8, end = 0.2)
  
@@ -1458,13 +1472,15 @@ ggsave("output/figures/accuracy/fcs_full.png", width = 15, height = 15)
 
 HDDS = full %>% filter(FS.Measure == "HDDS")
 
-rplot<-ggplot(data = HDDS, aes(x =Level, y = Value,colour = Model.Measure,shape=Model)) 
-rplot<-rplot + geom_point(size=7)
-rplot<-rplot + labs( x = "Geo-spatial Level", y = "Accuracy/Type I/Type II")
+rplot<-ggplot(data = HDDS, aes(x =Level, y = Value,shape=Model))  
+rplot<-rplot + geom_point(size=7,color='#619CFF',show.legend = FALSE)   +  facet_grid(. ~  Model.Measure) 
+rplot<-rplot + labs( x = "Geo-spatial Level", y = "Accuracy/Type I/Type II")  
 
-rplot <- rplot+ theme_classic() 
-rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) 
+rplot <- rplot    + theme_classic() + theme(strip.text.x = element_text(size = 25))
+
+rplot <- rplot +  theme(plot.title = element_text(size = 25, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=25),axis.text.x=element_text(size=25),axis.text.y=element_text(size=25),
+                 axis.title=element_text(size=35,face="bold") ) 
+ 
 
  #rplot = rplot + scale_color_grey(start = 0.8, end = 0.2)
  
@@ -1480,13 +1496,15 @@ ggsave("output/figures/accuracy/hdds_full.png", width = 15, height = 15)
 
 rCSI = full %>% filter(FS.Measure == "rCSI")
 
-rplot<-ggplot(data = rCSI, aes(x =Level, y = Value,colour = Model.Measure,shape=Model)) 
-rplot<-rplot + geom_point(size=7)
+rplot<-ggplot(data = rCSI, aes(x =Level, y = Value,shape=Model)) 
+rplot<-rplot +  geom_point(size=7,color='#F8766D',show.legend = FALSE)   +  facet_grid(. ~  Model.Measure) 
 rplot<-rplot + labs( x = "Geo-spatial Level", y = "Accuracy/Type I/Type II")
 
-rplot <- rplot+ theme_classic() 
-rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                 axis.title=element_text(size=17,face="bold") ) 
+rplot <- rplot    + theme_classic() + theme(strip.text.x = element_text(size = 25))
+
+rplot <- rplot +  theme(plot.title = element_text(size = 25, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=25),axis.text.x=element_text(size=25),axis.text.y=element_text(size=25),
+                 axis.title=element_text(size=35,face="bold") ) 
+ 
 
  #rplot = rplot + scale_color_grey(start = 0.8, end = 0.2)
  
@@ -1502,13 +1520,16 @@ ggsave("output/figures/accuracy/rCSI_full.png", width = 15, height = 15)
 
 FCS_tail = tail %>% filter(FS.Measure == "logFCS")
 
-rplot<-ggplot(data = FCS_tail, aes(x =Level, y = Value,colour = Model.Measure,shape=Model)) 
-rplot<-rplot + geom_point(size=7)
+rplot<-ggplot(data = FCS_tail, aes(x =Level, y = Value,shape=Model)) 
+rplot<-rplot + geom_point(size=7,color='#00BA38',show.legend = FALSE)   +  facet_grid(. ~  Model.Measure)
 rplot<-rplot + labs( x = "Geo-spatial Level", y = "Accuracy/Type I/Type II")
 
-rplot <- rplot+ theme_classic() 
-rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                        axis.title=element_text(size=17,face="bold") ) 
+
+rplot <- rplot    + theme_classic() + theme(strip.text.x = element_text(size = 25))
+
+rplot <- rplot +  theme(plot.title = element_text(size = 25, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=25),axis.text.x=element_text(size=25),axis.text.y=element_text(size=25),
+                 axis.title=element_text(size=35,face="bold") ) 
+ 
 
 #rplot = rplot + scale_color_grey(start = 0.8, end = 0.2)
 
@@ -1524,14 +1545,15 @@ ggsave("output/figures/accuracy/fcs_tail.png", width = 15, height = 15)
 
 HDDS = tail %>% filter(FS.Measure == "HDDS")
 
-rplot<-ggplot(data = HDDS, aes(x =Level, y = Value,colour = Model.Measure,shape=Model)) 
-rplot<-rplot + geom_point(size=7)
+rplot<-ggplot(data = HDDS, aes(x =Level, y = Value,shape=Model)) 
+rplot<-rplot + geom_point(size=7,color='#619CFF',show.legend = FALSE)   +  facet_grid(. ~  Model.Measure) 
 rplot<-rplot + labs( x = "Geo-spatial Level", y = "Accuracy/Type I/Type II")
 
-rplot <- rplot+ theme_classic() 
-rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                        axis.title=element_text(size=17,face="bold") ) 
+rplot <- rplot    + theme_classic() + theme(strip.text.x = element_text(size = 25))
 
+rplot <- rplot +  theme(plot.title = element_text(size = 25, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=25),axis.text.x=element_text(size=25),axis.text.y=element_text(size=25),
+                 axis.title=element_text(size=35,face="bold") ) 
+ 
 #rplot = rplot + scale_color_grey(start = 0.8, end = 0.2)
 
 # +  theme(plot.margin = unit(c(1, 2, 1, 1), "lines"))  
@@ -1545,15 +1567,16 @@ ggsave("output/figures/accuracy/hdds_tail.png", width = 15, height = 15)
 ```{r,echo=FALSE}
 
 rCSI = tail %>% filter(FS.Measure == "rCSI")
-
-rplot<-ggplot(data = rCSI, aes(x =Level, y = Value,colour = Model.Measure,shape=Model)) 
-rplot<-rplot + geom_point(size=7)
+ 
+rplot<-ggplot(data = rCSI, aes(x =Level, y = Value,shape=Model)) 
+rplot<-rplot +  geom_point(size=7,color='#F8766D',show.legend = FALSE)   +  facet_grid(. ~  Model.Measure) 
 rplot<-rplot + labs( x = "Geo-spatial Level", y = "Accuracy/Type I/Type II")
 
-rplot <- rplot+ theme_classic() 
-rplot <- rplot +  theme(plot.title = element_text(size = 12, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=18),axis.text.x=element_text(size=15),axis.text.y=element_text(size=15),
-                        axis.title=element_text(size=17,face="bold") ) 
+rplot <- rplot    + theme_classic() + theme(strip.text.x = element_text(size = 25))
 
+rplot <- rplot +  theme(plot.title = element_text(size = 25, face = "bold"),legend.title=element_text(size=20), legend.text=element_text(size=25),axis.text.x=element_text(size=25),axis.text.y=element_text(size=25),
+                 axis.title=element_text(size=35,face="bold") ) 
+ 
 #rplot = rplot + scale_color_grey(start = 0.8, end = 0.2)
 
 # +  theme(plot.margin = unit(c(1, 2, 1, 1), "lines"))  
