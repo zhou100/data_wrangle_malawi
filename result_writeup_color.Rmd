@@ -1655,30 +1655,121 @@ cat("and the number of overlapping ipc zones is" ,length(common_lhz))
 
 
 ```{r,include= FALSE}
-# library("ggpubr")
-# ggscatter(logFCS_pair, x = "actual", y = "predict",
-#           add = "reg.line", conf.int = TRUE, 
-#           cor.coef = FALSE, cor.method = "pearson",
-#           xlab = "actual", ylab = "predict")
-# 
-# ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-#        dpi = 1000, limitsize = TRUE)
-# 
-# ggscatter(d, x ="RCSI_cluster" , y = "RCSI_pred",
-#           add = "reg.line", conf.int = TRUE, 
-#           cor.coef = TRUE, cor.method = "pearson",
-#           xlab = "actual", ylab = "predict")
-# 
-# ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-#        dpi = 1000, limitsize = TRUE)
-# 
-# ggscatter(d, x ="HDDS_cluster" , y = "HDDS_pred",
-#           add = "reg.line", conf.int = TRUE, 
-#           cor.coef = FALSE, cor.method = "pearson",
-#           xlab = "actual", ylab = "predict")
-# 
-# ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
-#        dpi = 1000, limitsize = TRUE)
+library("ggpubr")
+ggscatter(logFCS_pair, x = "actual", y = "predict",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = FALSE, cor.method = "pearson",
+          xlab = "actual", ylab = "predict")
+
+ggsave("logFCS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+ggscatter(d, x ="RCSI_cluster" , y = "RCSI_pred",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "actual", ylab = "predict")
+
+ggsave("RCSI_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
+
+ggscatter(d, x ="HDDS_cluster" , y = "HDDS_pred",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = FALSE, cor.method = "pearson",
+          xlab = "actual", ylab = "predict")
+
+ggsave("HDDS_scatter.png", plot = last_plot(),device = "png",path = "output/figures/",
+       dpi = 1000, limitsize = TRUE)
 
 
 ```
+
+
+
+ ipc only value 
+```{r,include=FALSE}
+logFCS_IPC <- read.csv("data/all_ipc/logFCS_predict_CLUST_IPC.csv")
+HDDS_IPC <- read.csv("data/all_ipc/HDDS_predict_CLUST_IPC.csv")
+RCSI_IPC <- read.csv("data/all_ipc/RCSI_predict_CLUST_IPC.csv")
+
+table(logFCS_IPC$clust_logFCS)
+
+ggscatter(logFCS_IPC, x = "clust_logFCS", y = "clust_logFCS_predict_ipc",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "actual", ylab = "predict")
+# 
+library("ggpubr")
+cor.test(HDDS_IPC$clust_HDDS, HDDS_IPC$clust_HDDS_predict_ipc, method="pearson")
+cor.test(logFCS_IPC$clust_logFCS, logFCS_IPC$clust_logFCS_predict_ipc, method="pearson")
+cor.test(RCSI_IPC$clust_RCSI, RCSI_IPC$clust_RCSI_predict_ipc, method="pearson")
+
+cor.test(HDDS_IPC$clust_HDDS, HDDS_IPC$clust_HDDS_predict_ipc, method="pearson")
+logFCS_pair = as.data.frame(logFCS_pair)
+cor.test(logFCS_pair$predict, logFCS_pair$actual, method="pearson")
+cor.test(RCSI_IPC$clust_RCSI, RCSI_IPC$clust_RCSI_predict_ipc, method="pearson")
+
+
+
+library(caret)
+# HDDS 3 6 
+HDDS_IPC$cat_HDDS<-cut(HDDS_IPC$clust_HDDS, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+HDDS_IPC$cat_HDDS_predict<-cut(HDDS_IPC$clust_HDDS_predict_ipc, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+print("HDDS confusionMatrix")
+confusionMatrix(HDDS_IPC$cat_HDDS_predict,HDDS_IPC$cat_HDDS)
+
+
+
+logFCS_IPC$cat_logFCS<-cut(logFCS_IPC$clust_logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+logFCS_IPC$cat_logFCS_predict<-cut(logFCS_IPC$clust_logFCS_predict_ipc, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+print("logFCS confusionMatrix")
+
+confusionMatrix(logFCS_IPC$cat_logFCS_predict,logFCS_IPC$cat_logFCS)
+
+
+
+
+
+RCSI_IPC$cat_RCSI<-cut(RCSI_IPC$clust_RCSI, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+RCSI_IPC$cat_RCSI_predict<-cut(RCSI_IPC$clust_RCSI_predict_ipc, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+
+print("RCSI confusionMatrix")
+
+confusionMatrix(RCSI_IPC$cat_RCSI_predict,RCSI_IPC$cat_RCSI)
+
+
+```
+
+```{R}
+   library(caret)
+logFCS <- read.csv("data/all_predict/logFCS/clust_logFCS_predict_ipczone_m3.csv")
+HDDS <- read.csv("data/all_predict/HDDS/clust_HDDS_predict_ipczone_m3.csv")
+RCSI <- read.csv("data/all_predict/RCSI/clust_RCSI_predict_ipczone_m3.csv")
+
+colnames(logFCS)<-c("logFCS","logFCS_predict")
+colnames(HDDS)<-c("HDDS","HDDS_predict")
+colnames(RCSI)<-c("RCSI","RCSI_predict")
+ 
+
+
+
+logFCS$cat_logFCS<-cut(logFCS$logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+logFCS$cat_logFCS_predict<-cut(logFCS$logFCS_predict, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+print("logFCS confusionMatrix")
+
+confusionMatrix(logFCS$cat_logFCS_predict,logFCS$cat_logFCS)
+
+# HDDS 3 6 
+HDDS$cat_HDDS<-cut(HDDS$HDDS, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+HDDS$cat_HDDS_predict<-cut(HDDS$HDDS_predict, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+print("HDDS confusionMatrix")
+confusionMatrix(HDDS$cat_HDDS_predict,HDDS$cat_HDDS)
+
+
+
+RCSI$cat_RCSI<-cut(RCSI$RCSI, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+RCSI$cat_RCSI_predict<-cut(RCSI$RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+
+print("RCSI confusionMatrix")
+
+confusionMatrix(RCSI$cat_RCSI_predict,RCSI$cat_RCSI)
+
