@@ -1772,4 +1772,99 @@ RCSI$cat_RCSI_predict<-cut(RCSI$RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Food
 print("RCSI confusionMatrix")
 
 confusionMatrix(RCSI$cat_RCSI_predict,RCSI$cat_RCSI)
+confusionMatrix(RCSI$cat_RCSI_predict,RCSI$cat_RCSI)
 
+```
+
+```{r}
+hh_2010 <- read.csv("data/IHS2010.csv")
+hh_2013 = read.csv("data/IHS2013.csv")
+
+hdds_predict_m3 = read.csv("data/punchline/HDDS_predict_CLUST.csv")
+logFCS_predict_m3 = read.csv("data/punchline/logFCS_predict_CLUST.csv")
+RCSI_predict_m3 = read.csv("data/punchline/RCSI_predict_CLUST.csv")
+
+hdds_predict_IPC = read.csv("data/punchline/HDDS_predict_CLUST_IPC.csv")
+logFCS_predict_IPC = read.csv("data/punchline/logFCS_predict_CLUST_IPC.csv")
+RCSI_predict_IPC = read.csv("data/punchline/RCSI_predict_CLUST_IPC.csv")
+
+HDDS_predicts = left_join(hdds_predict_m3,hdds_predict_IPC,by=c("clust"="clust","clust_HDDS"="clust_HDDS"))
+logFCS_predicts = left_join(logFCS_predict_m3,logFCS_predict_IPC,by=c("clust"="clust","clust_logFCS"="clust_logFCS"))
+RCSI_predicts = left_join(RCSI_predict_m3,RCSI_predict_IPC,by=c("clust"="clust","clust_RCSI"="clust_RCSI"))
+
+
+
+
+RCSI_predicts$cat_RCSI<-cut(RCSI_predicts$clust_RCSI, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+RCSI_predicts$cat_RCSI_predict_IPC<-cut(RCSI_predicts$clust_RCSI_predict_ipc, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+RCSI_predicts$cat_RCSI_predict_m3<-cut(RCSI_predicts$clust_RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+
+library("ggpubr")
+cor(RCSI_predicts$clust_RCSI_predict, RCSI_predicts$clust_RCSI, method = c("pearson", "kendall", "spearman"))
+
+cor(logFCS_predicts$clust_logFCS_predict, logFCS_predicts$clust_logFCS, method = c("pearson", "kendall", "spearman"))
+cor(HDDS_predicts$clust_HDDS_predict, HDDS_predicts$clust_HDDS, method = c("pearson", "kendall", "spearman"))
+
+
+ 
+confusionMatrix(RCSI_predicts$cat_RCSI_predict_m3,RCSI_predicts$cat_RCSI)
+confusionMatrix(RCSI_predicts$cat_RCSI_predict_IPC,RCSI_predicts$cat_RCSI)
+ 
+
+logFCS_predicts$cat_logFCS<-cut(logFCS_predicts$clust_logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+logFCS_predicts$cat_logFCS_predict_IPC<-cut(logFCS_predicts$clust_logFCS_predict_ipc, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+logFCS_predicts$cat_logFCS_predict_m3<-cut(logFCS_predicts$clust_logFCS_predict, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+ 
+
+confusionMatrix(logFCS_predicts$cat_logFCS_predict_m3,logFCS_predicts$cat_logFCS)
+confusionMatrix(logFCS_predicts$cat_logFCS_predict_IPC,logFCS_predicts$cat_logFCS)
+
+# HDDS 3 6 
+
+HDDS_predicts$cat_HDDS<-cut(HDDS_predicts$clust_HDDS, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+HDDS_predicts$cat_HDDS_predict_IPC<-cut(HDDS_predicts$clust_HDDS_predict_ipc, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+ HDDS_predicts$cat_HDDS_predict_m3<-cut(HDDS_predicts$clust_HDDS_predict, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+ 
+
+confusionMatrix(HDDS_predicts$cat_HDDS_predict_m3,HDDS_predicts$cat_HDDS)
+confusionMatrix(HDDS_predicts$cat_HDDS_predict_IPC,HDDS_predicts$cat_HDDS)
+
+```
+
+```{R}
+hh_2013 = read.csv("data/IHS2013.csv")
+
+hh_level = hh_2013 %>% select(clust,logFCS,RCSI,HDDS)
+hh_predicts = left_join(hh_level,HDDS_predicts,by = "clust")
+hh_predicts = left_join(hh_predicts,logFCS_predicts,by = "clust")
+hh_predicts = left_join(hh_predicts,RCSI_predicts,by = "clust")
+
+hh_predicts$cat_HDDS<-cut(hh_predicts$HDDS, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+hh_predicts$cat_HDDS_predict_IPC<-cut(hh_predicts$clust_HDDS_predict_ipc, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+hh_predicts$cat_HDDS_predict_m3<-cut(hh_predicts$clust_HDDS_predict, c(0,3, 6,Inf),labels=c("Low Diversity","Medium Diversity","Good Diversity"))
+ 
+
+hh_predicts$cat_logFCS<-cut(hh_predicts$logFCS, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+hh_predicts$cat_logFCS_predict_IPC<-cut(hh_predicts$clust_logFCS_predict_ipc, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+hh_predicts$cat_logFCS_predict_m3<-cut(hh_predicts$clust_logFCS_predict, c(0,log(28), log(42),Inf),labels=c("Poor","Borderline","Acceptable"))
+ 
+
+
+hh_predicts$cat_RCSI<-cut(hh_predicts$RCSI, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+hh_predicts$cat_RCSI_predict_IPC<-cut(hh_predicts$clust_RCSI_predict_ipc, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+hh_predicts$cat_RCSI_predict_m3<-cut(hh_predicts$clust_RCSI_predict, c(-Inf,4,17,42,Inf),labels=c("Food Secure","Mild","Moderate","Severe"))
+
+
+confusionMatrix(hh_predicts$cat_HDDS_predict_m3,hh_predicts$cat_HDDS)
+confusionMatrix(hh_predicts$cat_HDDS_predict_IPC,hh_predicts$cat_HDDS)
+
+
+
+confusionMatrix(hh_predicts$cat_logFCS_predict_m3,hh_predicts$cat_logFCS)
+confusionMatrix(hh_predicts$cat_logFCS_predict_IPC,hh_predicts$cat_logFCS)
+ 
+
+confusionMatrix(hh_predicts$cat_RCSI_predict_m3,hh_predicts$cat_RCSI)
+confusionMatrix(hh_predicts$cat_RCSI_predict_IPC,hh_predicts$cat_RCSI)
+ 
+```
